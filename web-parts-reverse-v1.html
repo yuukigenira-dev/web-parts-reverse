@@ -1,0 +1,2775 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="作りたい動きから、組み込み方を探す">
+<title>Webパーツ逆引きノート</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%226%22%20fill%3D%22%231d4f91%22%2F%3E%3Crect%20x%3D%228%22%20y%3D%229%22%20width%3D%2216%22%20height%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Crect%20x%3D%228%22%20y%3D%2215%22%20width%3D%2216%22%20height%3D%223%22%20fill%3D%22%23d6e4f5%22%2F%3E%3Crect%20x%3D%228%22%20y%3D%2221%22%20width%3D%2210%22%20height%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E">
+<style>
+:root {
+  --nb-bg: #f3f5f8;
+  --nb-surface: #ffffff;
+  --nb-ink: #1b2836;
+  --nb-muted: #5c6c7d;
+  --nb-line: #d5dee8;
+  --nb-blue: #1d4f91;
+  --nb-soft: #e6eef8;
+  --nb-danger-bg: #fde8e6;
+  --nb-danger: #6f221c;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--nb-bg); color: var(--nb-ink); }
+body {
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+img { max-width: 100%; }
+button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: 2px; }
+.nb-wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+.nb-wrap, #panel, .nb-try, .nb-try > div, .nb-controls { min-width: 0; }
+.nb-header { margin-bottom: 20px; }
+h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.3; }
+h2 { margin: 24px 0 8px; font-size: 22px; line-height: 1.4; }
+h3 { margin: 18px 0 8px; font-size: 18px; line-height: 1.4; }
+.nb-lead, .nb-kicker { margin: 0 0 8px; }
+.nb-kicker, .nb-help, .nb-foot, .nb-filemeta { color: var(--nb-muted); }
+.nb-foot { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--nb-line); }
+.nb-picks { display: grid; gap: 16px; }
+.nb-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-height: 180px;
+  padding: 20px;
+  border: 1px solid var(--nb-line);
+  border-radius: 16px;
+  background: var(--nb-surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.nb-pick:hover { border-color: var(--nb-blue); background: var(--nb-soft); }
+.nb-pick strong { font-size: 20px; line-height: 1.4; }
+.nb-pick-cta { margin-top: auto; color: var(--nb-blue); font-weight: 700; }
+.nb-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 0 0 4px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--nb-blue);
+  font: inherit;
+}
+.nb-tabs, .nb-subtabs, .nb-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.nb-tabs { margin: 16px 0; }
+.nb-btn, .nb-tabs button, .nb-subtabs button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--nb-blue);
+  border-radius: 8px;
+  background: var(--nb-surface);
+  color: var(--nb-blue);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.3;
+}
+.nb-btn.primary, .nb-tabs button[aria-selected="true"], .nb-subtabs button[aria-selected="true"] {
+  background: var(--nb-blue);
+  color: #fff;
+}
+.nb-try { display: grid; gap: 20px; }
+.nb-frame {
+  display: block;
+  width: 100%;
+  height: min(70vh, 640px);
+  min-height: 420px;
+  border: 1px solid var(--nb-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.nb-note, .nb-alert, .nb-confirm {
+  margin: 0 0 12px;
+  padding: 12px;
+  border-radius: 8px;
+}
+.nb-note { background: var(--nb-soft); }
+.nb-alert { background: var(--nb-danger-bg); color: var(--nb-danger); }
+.nb-confirm { background: #fff; border: 1px solid var(--nb-line); }
+.nb-field { display: flex; flex-direction: column; gap: 6px; margin: 0 0 16px; }
+.nb-field > span, .nb-choice-title { font-weight: 700; }
+.nb-help { margin: 0; }
+.nb-input, .nb-area, .nb-select, input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  font: inherit;
+  font-size: 16px;
+}
+.nb-input, .nb-area, .nb-select {
+  padding: 10px 12px;
+  border: 1px solid var(--nb-line);
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+}
+.nb-area { min-height: 96px; resize: vertical; }
+input[type="range"] { width: 100%; height: 44px; margin: 0; accent-color: var(--nb-blue); }
+.nb-choice { display: flex; align-items: flex-start; gap: 8px; min-height: 44px; padding: 8px 0; }
+.nb-choice input { width: 22px; height: 22px; margin-top: 2px; flex: 0 0 auto; }
+.is-locked { opacity: 0.55; }
+.nb-slot {
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--nb-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.nb-thumb { display: block; width: 100%; height: 96px; object-fit: cover; border-radius: 8px; background: var(--nb-soft); }
+.nb-code {
+  display: block;
+  width: 0;
+  min-width: 100%;
+  margin: 0;
+  max-width: 100%;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--nb-line);
+  border-radius: 8px;
+  background: #f7f9fb;
+  color: var(--nb-ink);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  white-space: pre;
+  tab-size: 2;
+}
+.nb-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.nb-table th, .nb-table td {
+  border: 1px solid var(--nb-line);
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+  word-break: break-all;
+}
+.nb-table th { background: var(--nb-soft); }
+ol, ul { padding-left: 1.4em; }
+#nb-toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: none;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--nb-ink);
+  color: #fff;
+}
+#nb-toast.is-on { display: block; }
+@media (min-width: 960px) {
+  .nb-picks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .nb-try { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  .nb-controls { position: sticky; top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nb-pick, .nb-btn, .nb-frame { transition: none; }
+}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="nb-toast" role="status" aria-live="polite"></div>
+<script type="text/plain" id="src-css-reveal">
+/* スクロールで順番に現す。wpr- で始め、ページ全体の見出しやボタンには当てない。 */
+.wpr-reveal,
+.wpr-reveal * { box-sizing: border-box; }
+.wpr-reveal {
+  --wpr-duration: 600ms;
+  --wpr-distance: 25px;
+  color: #1b2836;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.wpr-reveal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .wpr-reveal-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.wpr-reveal-item { min-width: 0; }
+.wpr-reveal-card {
+  height: 100%;
+  background: #fff;
+  border: 1px solid #d5dee8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.wpr-reveal-img {
+  display: block;
+  width: 100%;
+  height: 148px;
+  object-fit: cover;
+  background: #e6eef8;
+}
+.wpr-reveal-copy { padding: 14px 16px 16px; }
+.wpr-reveal-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+.wpr-reveal-text { margin: 0; white-space: pre-wrap; }
+.wpr-reveal .wpr-img-fallback {
+  display: flex;
+  align-items: center;
+  min-height: 80px;
+  padding: 12px 16px;
+  background: #f3f5f8;
+  color: #1b2836;
+}
+/* .wpr-ready は JavaScript の初期化に成功したときだけ付く。付かなければ本文は見えたまま。 */
+.wpr-reveal.wpr-ready .wpr-reveal-item { opacity: 0; }
+.wpr-reveal.wpr-from-bottom.wpr-ready .wpr-reveal-item { transform: translate3d(0, var(--wpr-distance), 0); }
+.wpr-reveal.wpr-from-left.wpr-ready .wpr-reveal-item { transform: translate3d(calc(var(--wpr-distance) * -1), 0, 0); }
+.wpr-reveal.wpr-from-right.wpr-ready .wpr-reveal-item { transform: translate3d(var(--wpr-distance), 0, 0); }
+.wpr-reveal.wpr-ready .wpr-reveal-item.is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--wpr-duration) ease-out, transform var(--wpr-duration) ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wpr-reveal.wpr-ready .wpr-reveal-item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+</script>
+<script type="text/plain" id="src-js-reveal">
+/* 学習用。圧縮していない。画面内に入ったカードへクラスを付けるだけで、毎フレーム座標は計算しない。 */
+(function () {
+  "use strict";
+  var MARK = "data-wpr-booted";
+  var host = window.__wprScrollReveal;
+  if (!host) host = window.__wprScrollReveal = { list: [], bound: false, ticking: false };
+
+  function reduced() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function metrics(item) {
+    var view = { top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight, height: window.innerHeight };
+    var rect = item.getBoundingClientRect();
+    var top = Math.max(rect.top, view.top);
+    var bottom = Math.min(rect.bottom, view.bottom);
+    var left = Math.max(rect.left, view.left);
+    var right = Math.min(rect.right, view.right);
+    var ih = bottom - top;
+    var iw = right - left;
+    var area = rect.width * rect.height;
+    var ratio = ih > 0 && iw > 0 && area > 0 ? (ih * iw) / area : 0;
+    var tall = rect.height > view.height && ih >= view.height * 0.1 && iw > 0;
+    return {
+      visible: ratio >= 0.1 || tall,
+      fullyOut: rect.bottom < view.top - 8 || rect.top > view.bottom + 8 || rect.right < view.left - 8 || rect.left > view.right + 8
+    };
+  }
+
+  function notify() {
+    host.list.slice().forEach(function (fn) { fn(); });
+  }
+
+  if (!host.bound) {
+    host.bound = true;
+    window.addEventListener("scroll", function () {
+      if (host.ticking) return;
+      host.ticking = true;
+      window.requestAnimationFrame(function () {
+        host.ticking = false;
+        notify();
+      });
+    }, true);
+    window.addEventListener("resize", notify);
+  }
+
+  function boot(root) {
+    if (!root || root.getAttribute(MARK) === "1") return;
+    root.setAttribute(MARK, "1");
+    var items = Array.prototype.slice.call(root.querySelectorAll(".wpr-reveal-item"));
+    if (reduced()) {
+      items.forEach(function (item) { item.classList.add("is-in"); });
+      root.classList.add("wpr-ready");
+      return;
+    }
+    var replay = root.getAttribute("data-wpr-replay") === "repeat" ? "repeat" : "once";
+    var stagger = parseInt(root.getAttribute("data-wpr-stagger") || "0", 10);
+    if (!isFinite(stagger) || stagger < 0) stagger = 0;
+    var timers = new WeakMap();
+    var observer = null;
+
+    function cancel(item) {
+      var id = timers.get(item);
+      if (id) {
+        window.clearTimeout(id);
+        timers.delete(item);
+      }
+      item.removeAttribute("data-wpr-pending");
+    }
+
+    function arm(list) {
+      var fresh = [];
+      list.forEach(function (item) {
+        if (!item.classList.contains("is-in") && item.getAttribute("data-wpr-pending") !== "1") fresh.push(item);
+      });
+      fresh.sort(function (a, b) {
+        if (a === b) return 0;
+        return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+      });
+      fresh.forEach(function (item, index) {
+        item.setAttribute("data-wpr-pending", "1");
+        var timer = window.setTimeout(function () {
+          timers.delete(item);
+          if (item.getAttribute("data-wpr-pending") !== "1") return;
+          item.removeAttribute("data-wpr-pending");
+          if (!item.isConnected || !metrics(item).visible) return;
+          item.classList.add("is-in");
+          if (replay === "once" && observer) observer.unobserve(item);
+        }, stagger * index);
+        timers.set(item, timer);
+      });
+    }
+
+    function sync() {
+      if (!root.isConnected) {
+        destroy();
+        return;
+      }
+      var entered = [];
+      items.forEach(function (item) {
+        var state = metrics(item);
+        if (state.visible) {
+          if (!item.classList.contains("is-in")) entered.push(item);
+        } else if (item.getAttribute("data-wpr-pending") === "1") {
+          cancel(item);
+        }
+        if (replay === "repeat" && item.classList.contains("is-in") && state.fullyOut) {
+          item.classList.remove("is-in");
+          if (observer) observer.observe(item);
+        }
+      });
+      if (entered.length) arm(entered);
+    }
+
+    function destroy() {
+      if (observer) observer.disconnect();
+      items.forEach(cancel);
+      var index = host.list.indexOf(sync);
+      if (index >= 0) host.list.splice(index, 1);
+      root.removeAttribute(MARK);
+      root._wprCleanup = null;
+    }
+
+    observer = new IntersectionObserver(function () { sync(); }, {
+      root: null,
+      threshold: [0, 0.1, 0.25, 0.5, 1]
+    });
+    root._wprCleanup = destroy;
+    host.list.push(sync);
+    root.classList.add("wpr-ready");
+    items.forEach(function (item) { observer.observe(item); });
+    sync();
+  }
+
+  function init() {
+    var nodes = document.querySelectorAll('[data-wpr-part="scroll-reveal"]');
+    Array.prototype.forEach.call(nodes, boot);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+
+</script>
+<script type="text/plain" id="src-css-lightbox">
+/* クリックで画像を拡大する。ボタンや画像の全体指定はしない。 */
+.wpr-lightbox,
+.wpr-lightbox * { box-sizing: border-box; }
+.wpr-lightbox {
+  --wpr-duration: 250ms;
+  --wpr-dim: 0.7;
+  --wpr-max: 960px;
+  color: #1b2836;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.wpr-lightbox-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+@media (min-width: 560px) {
+  .wpr-lightbox-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  .wpr-lightbox-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.wpr-lightbox-thumb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #d5dee8;
+  border-radius: 12px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+.wpr-lightbox-thumb img {
+  display: block;
+  width: 100%;
+  height: 168px;
+  object-fit: cover;
+  background: #e6eef8;
+}
+.wpr-lightbox-caption {
+  display: block;
+  padding: 10px 12px 12px;
+  white-space: pre-wrap;
+}
+.wpr-lightbox .wpr-img-fallback,
+.wpr-lightbox-missing {
+  display: flex;
+  align-items: center;
+  min-height: 96px;
+  padding: 12px;
+  background: #f3f5f8;
+  color: #1b2836;
+}
+.wpr-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.wpr-lightbox-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(var(--wpr-max, 960px), calc(100vw - 32px));
+  height: fit-content;
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1b2836;
+  overflow: auto;
+}
+.wpr-lightbox-dialog::backdrop {
+  background: rgba(17, 24, 32, var(--wpr-dim, 0.7));
+}
+.wpr-lightbox-panel {
+  position: relative;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  opacity: 1;
+  transform: none;
+}
+.wpr-lightbox-close {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  float: right;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0 0 8px 8px;
+  padding: 8px 14px;
+  border: 1px solid #1b2836;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2836;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.wpr-lightbox-full {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 140px);
+  margin: 0 auto;
+  object-fit: contain;
+  background: #f3f5f8;
+}
+.wpr-lightbox-dialog-caption {
+  margin: 12px 0 0;
+  white-space: pre-wrap;
+}
+.wpr-lightbox-dialog[data-wpr-effect="zoom"]:not(.is-open):not(.is-closing) .wpr-lightbox-panel,
+.wpr-lightbox-dialog[data-wpr-effect="fade"]:not(.is-open):not(.is-closing) .wpr-lightbox-panel {
+  opacity: 0;
+}
+.wpr-lightbox-dialog[data-wpr-effect="zoom"]:not(.is-open):not(.is-closing) .wpr-lightbox-panel {
+  transform: scale(0.94);
+}
+.wpr-lightbox-dialog.is-open[data-wpr-effect="zoom"] .wpr-lightbox-panel,
+.wpr-lightbox-dialog.is-open[data-wpr-effect="fade"] .wpr-lightbox-panel {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--wpr-duration) ease-out, transform var(--wpr-duration) ease-out;
+}
+.wpr-lightbox-dialog.is-closing[data-wpr-effect="zoom"] .wpr-lightbox-panel {
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity var(--wpr-duration) ease-out, transform var(--wpr-duration) ease-out;
+}
+.wpr-lightbox-dialog.is-closing[data-wpr-effect="fade"] .wpr-lightbox-panel {
+  opacity: 0;
+  transform: none;
+  transition: opacity var(--wpr-duration) ease-out, transform var(--wpr-duration) ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wpr-lightbox-dialog[data-wpr-effect="zoom"]:not(.is-open):not(.is-closing) .wpr-lightbox-panel,
+  .wpr-lightbox-dialog[data-wpr-effect="fade"]:not(.is-open):not(.is-closing) .wpr-lightbox-panel,
+  .wpr-lightbox-dialog.is-open[data-wpr-effect="zoom"] .wpr-lightbox-panel,
+  .wpr-lightbox-dialog.is-open[data-wpr-effect="fade"] .wpr-lightbox-panel,
+  .wpr-lightbox-dialog.is-closing[data-wpr-effect="zoom"] .wpr-lightbox-panel,
+  .wpr-lightbox-dialog.is-closing[data-wpr-effect="fade"] .wpr-lightbox-panel {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+</script>
+<script type="text/plain" id="src-js-lightbox">
+/* 学習用。圧縮していない。開く、画像の切り替え、閉じるを一つの終了処理にまとめている。 */
+(function () {
+  "use strict";
+  var MARK = "data-wpr-booted";
+
+  function reduced() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function effectOf(root) {
+    if (reduced()) return "none";
+    var motion = root.getAttribute("data-wpr-motion") || "zoom";
+    if (motion === "fade" || motion === "none") return motion;
+    return "zoom";
+  }
+
+  function durationOf(root) {
+    var value = parseInt(root.getAttribute("data-wpr-duration") || "0", 10);
+    if (!isFinite(value) || value < 0) return 0;
+    return value;
+  }
+
+  function boot(root) {
+    if (!root || root.getAttribute(MARK) === "1") return;
+    var dialog = root.querySelector(".wpr-lightbox-dialog");
+    var panel = root.querySelector(".wpr-lightbox-panel");
+    var full = root.querySelector(".wpr-lightbox-full");
+    var cap = root.querySelector(".wpr-lightbox-dialog-caption");
+    var closeBtn = root.querySelector(".wpr-lightbox-close");
+    if (!dialog || !panel || !full || !closeBtn) return;
+    root.setAttribute(MARK, "1");
+
+    var state = "closed";
+    var opener = null;
+    var queued = null;
+    var savedX = 0;
+    var savedY = 0;
+    var timer = 0;
+    var onEnd = null;
+
+    function backdropOn() {
+      return root.getAttribute("data-wpr-backdrop") !== "off";
+    }
+
+    function clearTimer() {
+      if (timer) {
+        window.clearTimeout(timer);
+        timer = 0;
+      }
+      if (onEnd) {
+        panel.removeEventListener("transitionend", onEnd);
+        onEnd = null;
+      }
+    }
+
+    function restore() {
+      var back = opener;
+      opener = null;
+      var x = savedX;
+      var y = savedY;
+      function apply() {
+        if (state !== "closed") return;
+        if (back && back.isConnected) back.focus({ preventScroll: true });
+        window.scrollTo(x, y);
+      }
+      apply();
+      window.setTimeout(apply, 0);
+      window.setTimeout(apply, 50);
+    }
+
+    function afterClosed() {
+      if (state === "closed") return;
+      clearTimer();
+      dialog.classList.remove("is-open", "is-closing");
+      dialog.removeAttribute("data-wpr-effect");
+      state = "closed";
+      restore();
+      if (queued && queued.isConnected) {
+        var next = queued;
+        queued = null;
+        openItem(next);
+      }
+    }
+
+    function finishClose() {
+      if (state === "closed") return;
+      clearTimer();
+      if (dialog.open) dialog.close();
+      else afterClosed();
+    }
+
+    function requestClose() {
+      if (state === "closed" || state === "closing") return;
+      var effect = dialog.getAttribute("data-wpr-effect") || "none";
+      clearTimer();
+      if (effect === "none") {
+        finishClose();
+        return;
+      }
+      state = "closing";
+      dialog.classList.remove("is-open");
+      dialog.classList.add("is-closing");
+      var done = false;
+      onEnd = function (event) {
+        if (event.target !== panel) return;
+        if (event.propertyName !== "opacity" && event.propertyName !== "transform") return;
+        if (done) return;
+        done = true;
+        finishClose();
+      };
+      panel.addEventListener("transitionend", onEnd);
+      timer = window.setTimeout(function () {
+        if (done) return;
+        done = true;
+        finishClose();
+      }, durationOf(root) + 80);
+    }
+
+    function openItem(button) {
+      if (!button || !button.isConnected) return;
+      if (state === "opening" || state === "open") return;
+      if (state === "closing") {
+        queued = button;
+        return;
+      }
+      var img = button.querySelector("img");
+      if (!img) return;
+      opener = button;
+      savedX = window.scrollX;
+      savedY = window.scrollY;
+      full.alt = img.alt || "";
+      full.src = img.currentSrc || img.getAttribute("src") || "";
+      var caption = button.querySelector(".wpr-lightbox-caption");
+      var text = caption ? caption.textContent : "";
+      if (cap) {
+        cap.textContent = text;
+        cap.hidden = text.trim() === "";
+      }
+      var effect = effectOf(root);
+      dialog.setAttribute("data-wpr-effect", effect);
+      dialog.classList.remove("is-open", "is-closing");
+      try {
+        if (!dialog.open) dialog.showModal();
+      } catch (err) {
+        if (!dialog.hasAttribute("open")) dialog.setAttribute("open", "");
+      }
+      if (effect === "none") {
+        state = "open";
+        dialog.classList.add("is-open");
+        closeBtn.focus({ preventScroll: true });
+        return;
+      }
+      state = "opening";
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          if (state !== "opening") return;
+          dialog.classList.add("is-open");
+          timer = window.setTimeout(function () {
+            if (state === "opening") state = "open";
+          }, durationOf(root));
+          closeBtn.focus({ preventScroll: true });
+        });
+      });
+    }
+
+    root.addEventListener("click", function (event) {
+      var button = event.target.closest(".wpr-lightbox-thumb");
+      if (!button || !root.contains(button)) return;
+      openItem(button);
+    });
+    closeBtn.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      requestClose();
+    });
+    dialog.addEventListener("click", function (event) {
+      if (!backdropOn()) return;
+      if (event.target === dialog || (event.target.classList && event.target.classList.contains("wpr-lightbox-dim"))) {
+        requestClose();
+      }
+    });
+    dialog.addEventListener("cancel", function (event) {
+      event.preventDefault();
+      requestClose();
+    });
+    dialog.addEventListener("keydown", function (event) {
+      if (event.key !== "Tab" || !dialog.open) return;
+      var nodes = dialog.querySelectorAll("button, a[href], input, select, textarea, [tabindex]");
+      var list = [];
+      var i;
+      for (i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        if (node.disabled || node.tabIndex < 0) continue;
+        list.push(node);
+      }
+      if (!list.length) {
+        event.preventDefault();
+        return;
+      }
+      var first = list[0];
+      var last = list[list.length - 1];
+      var active = document.activeElement;
+      if (event.shiftKey) {
+        if (active === first || !dialog.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (active === last || !dialog.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+    dialog.addEventListener("close", function () {
+      if (state === "closed") return;
+      afterClosed();
+    });
+    panel.addEventListener("click", function (event) {
+      event.stopPropagation();
+    });
+    root.addEventListener("error", function (event) {
+      var target = event.target;
+      if (!target || target.tagName !== "IMG" || target.classList.contains("wpr-broken")) return;
+      target.classList.add("wpr-broken");
+      target.hidden = true;
+      var note = document.createElement("span");
+      note.className = "wpr-img-fallback";
+      note.textContent = "この画像を表示できません。選び直すか、配置し直してください。";
+      if (target.parentNode) target.parentNode.insertBefore(note, target.nextSibling);
+    }, true);
+  }
+
+  function init() {
+    var nodes = document.querySelectorAll('[data-wpr-part="image-lightbox"]');
+    Array.prototype.forEach.call(nodes, boot);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+
+</script>
+<script type="text/plain" id="src-css-orbit">
+/* 円形に回る画像。JavaScriptが付くまで、普通の一覧として見せる。 */
+.wpr-orbit,
+.wpr-orbit * { box-sizing: border-box; }
+.wpr-orbit {
+  --wpr-duration: 350ms;
+  --wpr-dim: 0.35;
+  --wpr-max: 960px;
+  --wpr-card: 160px;
+  color: #1b2836;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.wpr-orbit-note { margin: 0 0 8px; }
+.wpr-orbit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .wpr-orbit-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.wpr-orbit-card,
+.wpr-orbit-empty {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #d5dee8;
+  border-radius: 12px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+}
+.wpr-orbit-card { cursor: pointer; }
+.wpr-orbit-media { position: relative; background: #e6eef8; }
+.wpr-orbit-img,
+.wpr-orbit-empty span {
+  display: block;
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+  background: #e6eef8;
+}
+.wpr-orbit-empty span {
+  display: flex;
+  align-items: center;
+  height: auto;
+  min-height: 96px;
+  padding: 12px;
+}
+.wpr-orbit-shade {
+  position: absolute;
+  inset: 0;
+  background: #111820;
+  opacity: 0;
+  pointer-events: none;
+}
+.wpr-orbit-cap {
+  display: block;
+  padding: 8px 10px 10px;
+  background: #fff;
+}
+.wpr-orbit-card:focus-visible {
+  outline: 3px solid #1d4f91;
+  outline-offset: 2px;
+}
+.wpr-orbit-card.is-source { visibility: hidden; }
+.wpr-orbit-tools {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.wpr-orbit.wpr-ready .wpr-orbit-tools { display: flex; }
+.wpr-orbit-tools button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #1d4f91;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d4f91;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.wpr-orbit-tools button:disabled { opacity: 0.45; cursor: default; }
+.wpr-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.wpr-orbit.wpr-ready:not(.wpr-static) .wpr-orbit-stage {
+  position: relative;
+  width: 100%;
+}
+.wpr-orbit.wpr-ready:not(.wpr-static) .wpr-orbit-list {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+.wpr-orbit.wpr-ready:not(.wpr-static) .wpr-orbit-item {
+  position: absolute;
+  width: var(--wpr-card);
+  margin: 0;
+  transform-origin: center center;
+}
+.wpr-orbit.wpr-ready:not(.wpr-static) .wpr-orbit-img { height: calc(var(--wpr-card) * 0.62); }
+.wpr-orbit-dialog {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1b2836;
+  overflow: visible;
+}
+.wpr-orbit-dialog::backdrop {
+  background: rgba(17, 24, 32, var(--wpr-dim, 0.35));
+}
+.wpr-orbit-fly {
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+.wpr-orbit-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #1b2836;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2836;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.wpr-orbit-full {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f3f5f8;
+  pointer-events: none;
+}
+.wpr-orbit-fly-shade {
+  position: absolute;
+  inset: 0;
+  background: #111820;
+  pointer-events: none;
+}
+.wpr-orbit-dialog-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.94);
+  white-space: pre-wrap;
+}
+.wpr-orbit .wpr-img-fallback {
+  display: flex;
+  align-items: center;
+  min-height: 96px;
+  padding: 12px;
+  background: #f3f5f8;
+}
+
+</script>
+<script type="text/plain" id="src-js-orbit">
+/* 学習用。圧縮していない。楕円の位置は角度から決め、選んだ画像だけを元位置から前面へ動かす。 */
+(function () {
+  "use strict";
+  var MARK = "data-wpr-booted";
+  var TAU = Math.PI * 2;
+
+  function reduced() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function numAttr(root, name, fallback) {
+    var value = parseFloat(root.getAttribute(name) || "");
+    return isFinite(value) ? value : fallback;
+  }
+
+  function boot(root) {
+    if (!root || root.getAttribute(MARK) === "1") return;
+    var stage = root.querySelector(".wpr-orbit-stage");
+    var list = root.querySelector(".wpr-orbit-list");
+    var dialog = root.querySelector(".wpr-orbit-dialog");
+    var fly = root.querySelector(".wpr-orbit-fly");
+    var full = root.querySelector(".wpr-orbit-full");
+    var flyShade = root.querySelector(".wpr-orbit-fly-shade");
+    var cap = root.querySelector(".wpr-orbit-dialog-caption");
+    var closeBtn = root.querySelector(".wpr-orbit-close");
+    var pauseBtn = root.querySelector(".wpr-orbit-pause");
+    var prevBtn = root.querySelector(".wpr-orbit-prev");
+    var nextBtn = root.querySelector(".wpr-orbit-next");
+    var note = root.querySelector(".wpr-orbit-note");
+    if (!stage || !list || !dialog || !fly || !full || !closeBtn || !pauseBtn || !prevBtn || !nextBtn) return;
+    root.setAttribute(MARK, "1");
+
+    var items = Array.prototype.slice.call(root.querySelectorAll(".wpr-orbit-item"));
+    var N = items.length;
+    var phase = 0;
+    var metrics = null;
+    var manualHold = root.getAttribute("data-wpr-auto") === "off" || N < 3 || reduced();
+    var hoverHold = false;
+    var focusHold = false;
+    var offHold = false;
+    var hiddenHold = document.visibilityState === "hidden";
+    var enlargeHold = false;
+    var graceFocus = false;
+    var quietFocus = false;
+    var modality = "pointer";
+    var wasPlaying = false;
+    var reopenFocusHold = false;
+    var opener = null;
+    var queued = null;
+    var savedX = 0;
+    var savedY = 0;
+    var state = "closed";
+    var anim = null;
+    var timer = 0;
+    var moveGen = 0;
+    var nudge = null;
+    var lastTime = null;
+    var raf = 0;
+    var alive = true;
+
+    function period() {
+      var value = numAttr(root, "data-wpr-period", 24);
+      return value > 0 ? value : 24;
+    }
+
+    function durationOf() {
+      var value = numAttr(root, "data-wpr-duration", 350);
+      return value > 0 ? value : 0;
+    }
+
+    function dirSign() {
+      return root.getAttribute("data-wpr-direction") === "left" ? -1 : 1;
+    }
+
+    function spinning() {
+      return alive && N >= 3 && !reduced() && !manualHold && !hoverHold && !focusHold && !offHold && !hiddenHold && !enlargeHold && !nudge && state === "closed";
+    }
+
+    function label() {
+      pauseBtn.textContent = manualHold || reduced() || N < 3 ? "回転を再開" : "回転を止める";
+      pauseBtn.setAttribute("aria-pressed", manualHold ? "true" : "false");
+      root.classList.toggle("is-playing", spinning());
+    }
+
+    function measure() {
+      if (N < 3) {
+        root.classList.add("wpr-ready", "wpr-static");
+        stage.style.height = "";
+        list.style.height = "";
+        items.forEach(function (item) {
+          item.style.left = "";
+          item.style.top = "";
+          item.style.transform = "";
+          item.style.zIndex = "";
+        });
+        return true;
+      }
+      var width = stage.clientWidth || root.clientWidth;
+      if (width < 40) return false;
+      var pad = 10;
+      var card = Math.floor(Math.max(92, Math.min(210, width * 0.32)));
+      var rx = Math.max(36, Math.floor(width / 2 - card / 2 - pad));
+      var thick = numAttr(root, "data-wpr-thick", 0.4);
+      if (thick < 0.2) thick = 0.2;
+      if (thick > 0.75) thick = 0.75;
+      var ry = Math.max(28, Math.floor(rx * thick));
+      var cardH = Math.floor(card * 0.72 + 44);
+      var stageH = Math.floor(ry * 2 + cardH + pad * 2);
+      stage.style.height = stageH + "px";
+      list.style.height = stageH + "px";
+      root.style.setProperty("--wpr-card", card + "px");
+      root.classList.add("wpr-ready");
+      root.classList.remove("wpr-static");
+      metrics = { cx: width / 2, cy: stageH / 2, rx: rx, ry: ry };
+      return true;
+    }
+
+    function layout() {
+      if (N < 3 || !metrics) return;
+      var backScale = numAttr(root, "data-wpr-back-scale", 0.65);
+      var backBright = numAttr(root, "data-wpr-back-bright", 0.6);
+      var i;
+      for (i = 0; i < N; i++) {
+        var angle = phase + i * TAU / N;
+        var depth = (Math.cos(angle) + 1) / 2;
+        var scale = backScale + (1 - backScale) * depth;
+        var bright = backBright + (1 - backBright) * depth;
+        var x = metrics.cx + metrics.rx * Math.sin(angle);
+        var y = metrics.cy + metrics.ry * Math.cos(angle);
+        var item = items[i];
+        item.style.left = x + "px";
+        item.style.top = y + "px";
+        item.style.zIndex = String(Math.round(depth * 1000) + i);
+        item.style.transform = "translate(-50%, -50%) scale(" + scale.toFixed(4) + ")";
+        var shade = item.querySelector(".wpr-orbit-shade");
+        if (shade) shade.style.opacity = String(Math.max(0, Math.min(1, 1 - bright)));
+      }
+      root.classList.toggle("is-playing", spinning());
+    }
+
+    function kick() {
+      label();
+      if (!raf) raf = window.requestAnimationFrame(tick);
+    }
+
+    function tick(now) {
+      raf = window.requestAnimationFrame(tick);
+      if (!alive) return;
+      if (nudge) {
+        nudge(now);
+        return;
+      }
+      if (!spinning()) {
+        lastTime = null;
+        root.classList.toggle("is-playing", false);
+        return;
+      }
+      if (lastTime == null) lastTime = now;
+      var dt = now - lastTime;
+      lastTime = now;
+      if (dt < 0) dt = 0;
+      if (dt > 48) dt = 48;
+      phase += dirSign() * (dt / 1000) * TAU / period();
+      layout();
+    }
+
+    function normSigned(delta) {
+      var turn = TAU;
+      var value = delta % turn;
+      if (value > Math.PI) value -= turn;
+      if (value < -Math.PI) value += turn;
+      return value;
+    }
+
+    function phaseFor(index) {
+      return -index * TAU / N;
+    }
+
+    function frontIndex() {
+      var best = 0;
+      var bestDist = Infinity;
+      var i;
+      for (i = 0; i < N; i++) {
+        var angle = (phase + i * TAU / N) % TAU;
+        if (angle < 0) angle += TAU;
+        var dist = Math.min(angle, TAU - angle);
+        if (dist < bestDist - 0.0001 || (Math.abs(dist - bestDist) < 0.0001 && i < best)) {
+          bestDist = dist;
+          best = i;
+        }
+      }
+      return best;
+    }
+
+    function spinTo(index, instant) {
+      if (N < 3) return;
+      var delta = normSigned(phaseFor(index) - phase);
+      if (instant || reduced()) {
+        nudge = null;
+        phase += delta;
+        layout();
+        return;
+      }
+      var start = phase;
+      var t0 = 0;
+      nudge = function (now) {
+        if (!t0) t0 = now;
+        var p = Math.min(1, (now - t0) / 420);
+        var eased = 1 - Math.pow(1 - p, 3);
+        phase = start + delta * eased;
+        layout();
+        if (p >= 1) nudge = null;
+      };
+      kick();
+    }
+
+    function step(sign) {
+    if (N < 3 || state !== "closed") return;
+    manualHold = true;
+    var front = frontIndex();
+    var target = sign > 0
+      ? (dirSign() > 0 ? (front - 1 + N) % N : (front + 1) % N)
+      : (dirSign() > 0 ? (front + 1) % N : (front - 1 + N) % N);
+    spinTo(target, reduced());
+    label();
+  }
+
+    function indexOf(card) {
+      var item = card.closest(".wpr-orbit-item");
+      return item ? items.indexOf(item) : -1;
+    }
+
+    function clearTimer() {
+      if (timer) {
+        window.clearTimeout(timer);
+        timer = 0;
+      }
+    }
+
+    function applyRect(rect) {
+      fly.style.position = "fixed";
+      fly.style.left = rect.left + "px";
+      fly.style.top = rect.top + "px";
+      fly.style.width = Math.max(1, rect.width) + "px";
+      fly.style.height = Math.max(1, rect.height) + "px";
+    }
+
+    function sourceNode() {
+      return opener && opener.isConnected ? opener.querySelector(".wpr-orbit-img") : null;
+    }
+
+    function contentRect(img) {
+      var box = img.getBoundingClientRect();
+      var nw = img.naturalWidth;
+      var nh = img.naturalHeight;
+      if (!nw || !nh || box.width < 2 || box.height < 2) {
+        return { left: box.left, top: box.top, width: box.width, height: box.height };
+      }
+      var scale = Math.min(box.width / nw, box.height / nh);
+      var w = nw * scale;
+      var h = nh * scale;
+      return {
+        left: box.left + (box.width - w) / 2,
+        top: box.top + (box.height - h) / 2,
+        width: w,
+        height: h
+      };
+    }
+
+    function sourceRect() {
+      var img = sourceNode();
+      if (!img) return null;
+      var rect = contentRect(img);
+      if (rect.width < 2 || rect.height < 2) return null;
+      return rect;
+    }
+
+    function targetRect() {
+      var img = sourceNode() || full;
+      var pad = 16;
+      var maxW = Math.min(numAttr(root, "data-wpr-max", 960) || 960, window.innerWidth - pad * 2);
+      var maxH = window.innerHeight - pad * 2;
+      var nw = img.naturalWidth;
+      var nh = img.naturalHeight;
+      if (!nw || !nh) {
+        var box = img.getBoundingClientRect();
+        nw = box.width || 320;
+        nh = box.height || 200;
+      }
+      var ratio = nw / Math.max(1, nh);
+      var w = maxW;
+      var h = w / ratio;
+      if (h > maxH) {
+        h = maxH;
+        w = h * ratio;
+      }
+      return {
+        left: Math.round((window.innerWidth - w) / 2),
+        top: Math.round((window.innerHeight - h) / 2),
+        width: Math.round(w),
+        height: Math.round(h)
+      };
+    }
+
+    function shadeOf(card) {
+      var shade = card ? card.querySelector(".wpr-orbit-shade") : null;
+      if (!shade) return 0;
+      var value = parseFloat(shade.style.opacity || window.getComputedStyle(shade).opacity || "0");
+      return isFinite(value) ? value : 0;
+    }
+
+    function paintShade(value) {
+      if (!flyShade) return;
+      flyShade.style.opacity = String(value);
+    }
+
+    function move(from, to, shadeFrom, shadeTo, done) {
+      moveGen += 1;
+      var gen = moveGen;
+      clearTimer();
+      if (anim) {
+        anim.cancel();
+        anim = null;
+      }
+      applyRect(from);
+      paintShade(shadeFrom);
+      var finish = function () {
+        if (gen !== moveGen) return;
+        moveGen += 1;
+        if (anim) {
+          try { if (anim.commitStyles) anim.commitStyles(); } catch (err) {}
+          anim.cancel();
+          anim = null;
+        }
+        applyRect(to);
+        paintShade(shadeTo);
+        done();
+      };
+      if (reduced()) {
+        finish();
+        return;
+      }
+      anim = fly.animate([
+        { left: from.left + "px", top: from.top + "px", width: from.width + "px", height: from.height + "px" },
+        { left: to.left + "px", top: to.top + "px", width: to.width + "px", height: to.height + "px" }
+      ], { duration: durationOf(), easing: "ease-out", fill: "forwards" });
+      if (flyShade) {
+        flyShade.animate([{ opacity: shadeFrom }, { opacity: shadeTo }], { duration: durationOf(), easing: "ease-out", fill: "forwards" });
+      }
+      anim.onfinish = finish;
+      timer = window.setTimeout(finish, durationOf() + 90);
+    }
+
+    function haltAtCurrent() {
+      moveGen += 1;
+      clearTimer();
+      var rect = fly.getBoundingClientRect();
+      if (anim) {
+        anim.cancel();
+        anim = null;
+      }
+      if (rect.width > 1) applyRect(rect);
+      return rect;
+    }
+
+    function restore() {
+      var back = opener;
+      var x = savedX;
+      var y = savedY;
+      function apply() {
+        if (state !== "closed") return;
+        quietFocus = true;
+        if (back && back.isConnected) back.focus({ preventScroll: true });
+        quietFocus = false;
+        window.scrollTo(x, y);
+      }
+      apply();
+      window.setTimeout(apply, 0);
+      window.setTimeout(apply, 50);
+    }
+
+    function afterClosed() {
+      if (state === "closed") return;
+      clearTimer();
+      if (anim) {
+        anim.cancel();
+        anim = null;
+      }
+      if (opener) opener.classList.remove("is-source");
+      dialog.removeAttribute("data-wpr-effect");
+      state = "closed";
+      enlargeHold = false;
+      focusHold = reopenFocusHold;
+      if (wasPlaying) hoverHold = false;
+      restore();
+      var next = queued;
+      queued = null;
+      opener = null;
+      lastTime = null;
+      label();
+      kick();
+      if (next && next.isConnected) openCard(next);
+    }
+
+    function finishClose() {
+      if (state === "closed") return;
+      if (dialog.open) dialog.close();
+      else afterClosed();
+    }
+
+    function requestClose() {
+      if (state === "closed" || state === "closing") return;
+      var from = state === "opening" || state === "open" ? haltAtCurrent() : fly.getBoundingClientRect();
+      state = "closing";
+      var back = sourceRect();
+      var shade = opener ? shadeOf(opener) : 0;
+      if (reduced() || !back) {
+        finishClose();
+        return;
+      }
+      move(from, back, shadeOfFly(), shade, function () {
+        if (state === "closing") finishClose();
+      });
+    }
+
+    function shadeOfFly() {
+      if (!flyShade) return 0;
+      var value = parseFloat(flyShade.style.opacity || "0");
+      return isFinite(value) ? value : 0;
+    }
+
+    function openCard(card) {
+      if (!card || !card.isConnected) return;
+      if (state === "opening" || state === "open") return;
+      if (state === "closing") {
+        queued = card;
+        return;
+      }
+      var img = card.querySelector(".wpr-orbit-img");
+      if (!img) return;
+      wasPlaying = alive && N >= 3 && !reduced() && !manualHold && !focusHold && !offHold && !hiddenHold && !enlargeHold && !nudge && state === "closed";
+      reopenFocusHold = focusHold;
+      enlargeHold = true;
+      hoverHold = false;
+      nudge = null;
+      opener = card;
+      savedX = window.scrollX;
+      savedY = window.scrollY;
+      var from = contentRect(img);
+      var shade = shadeOf(card);
+      full.alt = img.alt || "";
+      full.src = img.currentSrc || img.getAttribute("src") || "";
+      var text = "";
+      var caption = card.querySelector(".wpr-orbit-cap");
+      if (caption) text = caption.textContent || "";
+      if (cap) {
+        cap.textContent = text;
+        cap.hidden = text.trim() === "";
+      }
+      card.classList.add("is-source");
+      var effect = reduced() ? "none" : "fly";
+      dialog.setAttribute("data-wpr-effect", effect);
+      try {
+        if (!dialog.open) dialog.showModal();
+      } catch (err) {
+        if (!dialog.hasAttribute("open")) dialog.setAttribute("open", "");
+      }
+      state = "opening";
+      label();
+      closeBtn.focus({ preventScroll: true });
+      var fromNow = sourceRect() || from;
+      var to = targetRect();
+      move(fromNow, to, shade, 0, function () {
+        if (state === "opening") state = "open";
+      });
+    }
+
+    function onResize() {
+      if (N >= 3 && measure()) layout();
+      if (state === "open") applyRect(targetRect());
+      else if (state === "opening") {
+        var nowR = haltAtCurrent();
+        state = "opening";
+        move(nowR, targetRect(), shadeOfFly(), 0, function () {
+          if (state === "opening") state = "open";
+        });
+      } else if (state === "closing") {
+        var nowC = haltAtCurrent();
+        var back = sourceRect();
+        if (!back) {
+          finishClose();
+          return;
+        }
+        move(nowC, back, shadeOfFly(), opener ? shadeOf(opener) : 0, function () {
+          if (state === "closing") finishClose();
+        });
+      }
+    }
+
+    if (N < 3) {
+      if (note) note.hidden = false;
+      pauseBtn.disabled = true;
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+    } else if (note) note.hidden = true;
+
+    measure();
+    layout();
+    label();
+    kick();
+
+    root.addEventListener("pointerdown", function () { modality = "pointer"; }, true);
+    document.addEventListener("keydown", function (event) {
+      modality = "keyboard";
+      if (event.key !== "Tab") graceFocus = false;
+    }, true);
+    stage.addEventListener("pointerenter", function () {
+      hoverHold = true;
+      kick();
+    });
+    stage.addEventListener("pointerleave", function () {
+      hoverHold = false;
+      kick();
+    });
+    root.addEventListener("focusin", function (event) {
+      if (quietFocus || modality !== "keyboard" || dialog.open) return;
+      if (!root.contains(event.target)) return;
+      if (graceFocus && event.target === pauseBtn) return;
+      focusHold = true;
+      var card = event.target.closest ? event.target.closest(".wpr-orbit-card") : null;
+      if (card && state === "closed") {
+        var index = indexOf(card);
+        if (index >= 0) spinTo(index, reduced());
+      }
+      kick();
+    });
+    root.addEventListener("focusout", function () {
+      window.setTimeout(function () {
+        if (!root.contains(document.activeElement)) {
+          focusHold = false;
+          graceFocus = false;
+          kick();
+        }
+      }, 0);
+    });
+    document.addEventListener("visibilitychange", function () {
+      hiddenHold = document.visibilityState === "hidden";
+      lastTime = null;
+      kick();
+    });
+    if ("IntersectionObserver" in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        offHold = !entries[0].isIntersecting;
+        lastTime = null;
+        kick();
+      }, { threshold: 0.2 });
+      observer.observe(stage);
+    }
+    window.addEventListener("resize", onResize);
+    root.addEventListener("click", function (event) {
+      var card = event.target.closest ? event.target.closest(".wpr-orbit-card") : null;
+      if (!card || !root.contains(card)) return;
+      openCard(card);
+    });
+    pauseBtn.addEventListener("click", function () {
+      if (pauseBtn.disabled || reduced()) return;
+      manualHold = !manualHold;
+      if (!manualHold) {
+        graceFocus = true;
+        hoverHold = false;
+        focusHold = false;
+        lastTime = null;
+      }
+      label();
+      kick();
+    });
+    prevBtn.addEventListener("click", function () { step(-1); });
+    nextBtn.addEventListener("click", function () { step(1); });
+    root.addEventListener("keydown", function (event) {
+      if (dialog.open || N < 3) return;
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      if (!root.contains(document.activeElement)) return;
+      event.preventDefault();
+      step(event.key === "ArrowRight" ? 1 : -1);
+    });
+    closeBtn.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      requestClose();
+    });
+    dialog.addEventListener("click", function (event) {
+      if (event.target === dialog) requestClose();
+    });
+    dialog.addEventListener("cancel", function (event) {
+      event.preventDefault();
+      requestClose();
+    });
+    dialog.addEventListener("close", function () {
+      if (state === "closed") return;
+      afterClosed();
+    });
+    dialog.addEventListener("keydown", function (event) {
+      if (event.key !== "Tab" || !dialog.open) return;
+      var nodes = dialog.querySelectorAll("button, a[href], input, select, textarea, [tabindex]");
+      var listNodes = [];
+      var i;
+      for (i = 0; i < nodes.length; i++) {
+        if (nodes[i].disabled || nodes[i].tabIndex < 0) continue;
+        listNodes.push(nodes[i]);
+      }
+      if (!listNodes.length) {
+        event.preventDefault();
+        return;
+      }
+      var first = listNodes[0];
+      var last = listNodes[listNodes.length - 1];
+      var active = document.activeElement;
+      if (event.shiftKey) {
+        if (active === first || !dialog.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (active === last || !dialog.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+    fly.addEventListener("click", function (event) { event.stopPropagation(); });
+    root.addEventListener("error", function (event) {
+      var target = event.target;
+      if (!target || target.tagName !== "IMG" || target.classList.contains("wpr-broken")) return;
+      target.classList.add("wpr-broken");
+      target.hidden = true;
+      var noteNode = document.createElement("span");
+      noteNode.className = "wpr-img-fallback";
+      noteNode.textContent = "この画像を表示できません。選び直すか、配置し直してください。";
+      if (target.parentNode) target.parentNode.insertBefore(noteNode, target.nextSibling);
+    }, true);
+  }
+
+  function init() {
+    var nodes = document.querySelectorAll('[data-wpr-part="orbit-gallery"]');
+    Array.prototype.forEach.call(nodes, boot);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+
+  var LIMIT_ONE = 4 * 1024 * 1024;
+  var LIMIT_ALL = 12 * 1024 * 1024;
+  var previewNonce = 1;
+
+  function esc(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&" + "amp;")
+      .replace(/</g, "&" + "lt;")
+      .replace(/>/g, "&" + "gt;")
+      .replace(/"/g, "&" + "quot;")
+      .replace(/'/g, "&" + "#39;");
+  }
+
+  function source(id) {
+    var node = document.getElementById(id);
+    return node ? node.textContent.replace(/^\uFEFF/, "").trim() : "";
+  }
+
+  function makeId(length) {
+    var chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    var out = "";
+    if (window.crypto && crypto.getRandomValues) {
+      var bytes = new Uint8Array(length);
+      crypto.getRandomValues(bytes);
+      for (var i = 0; i < length; i++) out += chars[bytes[i] % chars.length];
+      return out;
+    }
+    for (var j = 0; j < length; j++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+  }
+
+  function svg(body) {
+    var xml = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">' + body + "</svg>";
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
+  }
+
+  var ART = {
+    circle: svg('<rect width="320" height="200" fill="#dbe7f5"/><circle cx="160" cy="100" r="58" fill="#1d4f91"/>'),
+    mountain: svg('<rect width="320" height="200" fill="#e5f2e4"/><path d="M0 160 L80 70 L140 130 L200 50 L320 160 V200 H0 Z" fill="#2f7d4a"/><path d="M0 180 L110 110 L180 160 L240 120 L320 180 V200 H0 Z" fill="#17382a"/>'),
+    sun: svg('<rect width="320" height="200" fill="#fff1df"/><circle cx="210" cy="78" r="36" fill="#e07a2f"/><rect x="0" y="140" width="320" height="60" fill="#f0c48a"/>'),
+    book: svg('<rect width="320" height="200" fill="#efe8f8"/><path d="M70 40 H160 V168 H70 Q90 150 70 40 Z" fill="#6d4ea8"/><path d="M250 40 H160 V168 H250 Q230 150 250 40 Z" fill="#4c3478"/>'),
+    wave: svg('<rect width="320" height="200" fill="#e4f4f7"/><path d="M0 90 Q40 60 80 90 T160 90 T240 90 T320 90 V120 Q280 150 240 120 T160 120 T80 120 T0 120 Z" fill="#1f7a8a"/><path d="M0 130 Q40 100 80 130 T160 130 T240 130 T320 130 V160 Q280 190 240 160 T160 160 T80 160 T0 160 Z" fill="#0e4d5c"/>'),
+    badge: svg('<rect width="320" height="200" fill="#fde8e6"/><polygon points="160,28 214,58 214,118 160,148 106,118 106,58" fill="#c24136"/>'),
+    leaf: svg('<rect width="320" height="200" fill="#e7f6df"/><ellipse cx="130" cy="110" rx="46" ry="70" fill="#2f7d4a" transform="rotate(-20 130 110)"/><ellipse cx="190" cy="100" rx="40" ry="64" fill="#17382a" transform="rotate(18 190 100)"/>'),
+    window: svg('<rect width="320" height="200" fill="#d7e8f8"/><rect x="70" y="36" width="180" height="128" rx="8" fill="#1d4f91"/><rect x="86" y="52" width="68" height="96" fill="#f3f5f8"/><rect x="166" y="52" width="68" height="96" fill="#d6e4f5"/>'),
+    arch: svg('<rect width="320" height="200" fill="#f8efe4"/><path d="M70 170 V90 A90 90 0 0 1 250 90 V170 Z" fill="#8a5a32"/><rect x="138" y="90" width="44" height="80" fill="#f3e2cf"/>'),
+    gem: svg('<rect width="320" height="200" fill="#eee8f8"/><polygon points="160,28 250,100 160,176 70,100" fill="#6d4ea8"/><polygon points="160,28 250,100 160,100" fill="#c9b6e8"/>')
+  };
+
+  var REVEAL_COPY = [
+    ["circle", "読み進めた時に出す", "最初から全部を見せず、画面に入った順番でカードを表示します。", "青い円が中央にある見本図"],
+    ["mountain", "実績を3列で並べる", "パソコンでは3列、スマートフォンでは1列です。列数の細かい指定は初版ではしません。", "緑の山が重なる見本図"],
+    ["sun", "説明は短く", "見出しと短い文章、必要なら画像。長い文章を隠す部品ではありません。", "橙色の太陽と水平線の見本図"],
+    ["book", "時間差は入った分だけ", "あとから1枚だけ入ったカードを、ページ全体の番号分は待たせません。", "紫の本を開いた見本図"],
+    ["wave", "一度だけ、または戻るたび", "表示した後も出したままにするか、画面の外へ出たらやり直すかを選べます。", "水色の波が並ぶ見本図"],
+    ["badge", "スクリプトなしでも読める", "動きは後から足します。JavaScriptが止まっても、本文が透明なままにはなりません。", "赤い六角形の徽章の見本図"]
+  ];
+
+  var LIGHT_COPY = [
+    ["circle", "中央の青い円。形の違いが分かる見本です。", "青い円が中央にある見本図"],
+    ["mountain", "重なった緑の山。色の面で区別します。", "緑の山が重なる見本図"],
+    ["sun", "橙色の太陽と地面。横に広い構図です。", "橙色の太陽と水平線の見本図"],
+    ["book", "開いた紫の本。左右で色を変えています。", "紫の本を開いた見本図"],
+    ["wave", "二つの水色の波。線の繰り返しです。", "水色の波が並ぶ見本図"],
+    ["badge", "赤い六角形の徽章。中央に置いた図です。", "赤い六角形の徽章の見本図"]
+  ];
+
+  var ORBIT_COPY = [
+    ["circle", "青い円", "青い円が中央にある見本図"],
+    ["mountain", "緑の山", "緑の山が重なる見本図"],
+    ["sun", "橙の太陽", "橙色の太陽と水平線の見本図"],
+    ["book", "紫の本", "紫の本を開いた見本図"],
+    ["wave", "水色の波", "水色の波が並ぶ見本図"],
+    ["badge", "赤い徽章", "赤い六角形の徽章の見本図"],
+    ["leaf", "緑の葉", "緑の葉が二枚並ぶ見本図"],
+    ["window", "青の窓", "青い四角の窓が並ぶ見本図"],
+    ["arch", "茶色のアーチ", "茶色のアーチと入口の見本図"],
+    ["gem", "紫のひし形", "紫のひし形が重なる見本図"],
+    ["leaf", "もう一枚の葉", "細い葉を重ねた見本図"],
+    ["window", "もう一つの窓", "窓を二つ並べた見本図"]
+  ];
+
+  function builtinImage(key) {
+    return {
+      source: "builtin",
+      key: key,
+      dataUrl: ART[key],
+      mime: "image/svg+xml",
+      name: "見本素材",
+      bytes: 0
+    };
+  }
+
+  function slotMax(part) {
+    return part === "orbit-gallery" ? 12 : 6;
+  }
+
+  function defaultCount(part) {
+    return part === "orbit-gallery" ? 8 : 6;
+  }
+
+  function byteCap(part) {
+    return part === "orbit-gallery" ? 20 * 1024 * 1024 : LIMIT_ALL;
+  }
+
+  function freshSlots(part) {
+    var slots = [];
+    var total = slotMax(part);
+    var i;
+    if (part === "scroll-reveal") {
+      for (i = 0; i < total; i++) {
+        slots.push({
+          title: REVEAL_COPY[i][1],
+          body: REVEAL_COPY[i][2],
+          alt: REVEAL_COPY[i][3],
+          caption: "",
+          image: builtinImage(REVEAL_COPY[i][0])
+        });
+      }
+      return slots;
+    }
+    if (part === "orbit-gallery") {
+      for (i = 0; i < total; i++) {
+        slots.push({
+          title: "",
+          body: "",
+          alt: ORBIT_COPY[i][2],
+          caption: ORBIT_COPY[i][1],
+          image: builtinImage(ORBIT_COPY[i][0])
+        });
+      }
+      return slots;
+    }
+    for (i = 0; i < total; i++) {
+      slots.push({
+        title: "",
+        body: "",
+        alt: LIGHT_COPY[i][2],
+        caption: LIGHT_COPY[i][1],
+        image: builtinImage(LIGHT_COPY[i][0])
+      });
+    }
+    return slots;
+  }
+
+  function defaultSettings(part) {
+    if (part === "scroll-reveal") {
+      return { direction: "bottom", duration: 600, stagger: 100, distance: 25, replay: "once" };
+    }
+    if (part === "orbit-gallery") {
+      return { auto: true, period: 24, direction: "right", thick: 40, backScale: 65, backBright: 60, duration: 350 };
+    }
+    return { motion: "zoom", duration: 250, dim: 70, maxWidth: 960, backdrop: true };
+  }
+
+  function freshPart(part) {
+    var prefix = part === "scroll-reveal" ? "reveal-" : part === "orbit-gallery" ? "orbit-" : "light-";
+    return {
+      instanceId: prefix + makeId(4),
+      assetId: makeId(4),
+      count: defaultCount(part),
+      settings: defaultSettings(part),
+      slots: freshSlots(part)
+    };
+  }
+
+  var session = {
+    parts: {
+      "scroll-reveal": freshPart("scroll-reveal"),
+      "image-lightbox": freshPart("image-lightbox"),
+      "orbit-gallery": freshPart("orbit-gallery")
+    }
+  };
+
+  var ui = {
+    screen: "home",
+    part: "scroll-reveal",
+    tab: "try",
+    codeKind: "html",
+    method: "new",
+    alert: "",
+    confirm: false,
+    focusId: "",
+    orbitDetail: false
+  };
+
+  function partState() {
+    return session.parts[ui.part];
+  }
+
+  function cssIdFor(part) {
+    if (part === "scroll-reveal") return "src-css-reveal";
+    if (part === "orbit-gallery") return "src-css-orbit";
+    return "src-css-lightbox";
+  }
+
+  function jsIdFor(part) {
+    if (part === "scroll-reveal") return "src-js-reveal";
+    if (part === "orbit-gallery") return "src-js-orbit";
+    return "src-js-lightbox";
+  }
+
+  function cssId() {
+    return cssIdFor(ui.part);
+  }
+
+  function jsId() {
+    return jsIdFor(ui.part);
+  }
+
+  function extOf(image) {
+    if (!image) return "img";
+    if (image.mime === "image/png") return "png";
+    if (image.mime === "image/webp") return "webp";
+    if (image.mime === "image/jpeg") return "jpg";
+    if (image.mime === "image/svg+xml") return "svg";
+    return "img";
+  }
+
+  function deployPath(part, state, index, image) {
+    var kind = part === "scroll-reveal" ? "reveal" : part === "orbit-gallery" ? "orbit" : "lightbox";
+    var n = String(index + 1).padStart(2, "0");
+    return "images/wpr-" + kind + "-" + state.assetId + "-" + n + "." + extOf(image);
+  }
+
+  function srcFor(part, state, index, image, mode) {
+    if (!image || image.source === "empty") return "";
+    if (image.source === "builtin" || mode === "data") return image.dataUrl;
+    return deployPath(part, state, index, image);
+  }
+
+  function buildFragment(part, state, mode) {
+    var mark = "<!-- パーツの範囲です。同じページに2つ置くときは data-wpr-id を別の値にしてください。動作は、この要素の内側だけを探します。 -->\n";
+    if (part === "scroll-reveal") {
+      var settings = state.settings;
+      var from = settings.direction === "left" || settings.direction === "right" || settings.direction === "none" ? settings.direction : "bottom";
+      var distance = from === "none" ? 0 : settings.distance;
+      var items = "";
+      for (var i = 0; i < state.count; i++) {
+        var slot = state.slots[i];
+        var image = slot.image && slot.image.source !== "empty" ? slot.image : null;
+        var img = image
+          ? '<img class="wpr-reveal-img" src="' + esc(srcFor(part, state, i, image, mode)) + '" alt="' + esc(slot.alt) + '">'
+          : "";
+        items += '<li class="wpr-reveal-item"><article class="wpr-reveal-card">' + img +
+          '<div class="wpr-reveal-copy"><h3 class="wpr-reveal-title">' + esc(slot.title) + "</h3>" +
+          '<p class="wpr-reveal-text">' + esc(slot.body) + "</p></div></article></li>";
+      }
+      return mark + '<section class="wpr-reveal wpr-from-' + from + '" data-wpr-part="scroll-reveal" data-wpr-id="' + esc(state.instanceId) +
+        '" data-wpr-replay="' + (settings.replay === "repeat" ? "repeat" : "once") + '" data-wpr-stagger="' + String(settings.stagger) +
+        '" style="--wpr-duration:' + String(settings.duration) + "ms;--wpr-distance:" + String(distance) + 'px">' +
+        '<ul class="wpr-reveal-list">' + items + "</ul></section>";
+    }
+    if (part === "orbit-gallery") {
+      var orbit = state.settings;
+      var thick = (Number(orbit.thick) / 100).toFixed(2);
+      var scale = (Number(orbit.backScale) / 100).toFixed(2);
+      var bright = (Number(orbit.backBright) / 100).toFixed(2);
+      var spin = orbit.direction === "left" ? "left" : "right";
+      var ring = "";
+      for (var r = 0; r < state.count; r++) {
+        var piece = state.slots[r];
+        var shot = piece.image && piece.image.source !== "empty" ? piece.image : null;
+        if (!shot) {
+          ring += '<li class="wpr-orbit-item"><div class="wpr-orbit-empty"><span>画像がありません。JPEG、PNG、WebPを選び直してください。</span></div></li>';
+          continue;
+        }
+        var line = piece.caption && String(piece.caption).trim()
+          ? '<span class="wpr-orbit-cap">' + esc(piece.caption) + "</span>"
+          : "";
+        ring += '<li class="wpr-orbit-item"><button type="button" class="wpr-orbit-card" aria-haspopup="dialog"><span class="wpr-orbit-media"><img class="wpr-orbit-img" src="' +
+          esc(srcFor(part, state, r, shot, mode)) + '" alt="' + esc(piece.alt) + '"><span class="wpr-orbit-shade" aria-hidden="true"></span></span>' +
+          line + '<span class="wpr-sr">拡大して見る</span></button></li>';
+      }
+      return mark + '<section class="wpr-orbit" data-wpr-part="orbit-gallery" data-wpr-id="' + esc(state.instanceId) +
+        '" data-wpr-auto="' + (orbit.auto ? "on" : "off") + '" data-wpr-period="' + String(orbit.period) + '" data-wpr-direction="' + spin +
+        '" data-wpr-thick="' + thick + '" data-wpr-back-scale="' + scale + '" data-wpr-back-bright="' + bright +
+        '" data-wpr-duration="' + String(orbit.duration) + '" style="--wpr-duration:' + String(orbit.duration) + 'ms;--wpr-dim:0.35;--wpr-max:960px">' +
+        '<p class="wpr-orbit-note" hidden>画像が1〜2枚のときは、回転せずにその場で拡大できます。</p>' +
+        '<div class="wpr-orbit-stage"><ul class="wpr-orbit-list">' + ring + "</ul></div>" +
+        '<div class="wpr-orbit-tools"><button type="button" class="wpr-orbit-pause">回転を止める</button><button type="button" class="wpr-orbit-prev">前の画像</button><button type="button" class="wpr-orbit-next">次の画像</button></div>' +
+        '<dialog class="wpr-orbit-dialog" aria-label="拡大画像"><div class="wpr-orbit-fly"><button type="button" class="wpr-orbit-close">閉じる</button><img class="wpr-orbit-full" alt=""><span class="wpr-orbit-fly-shade" aria-hidden="true"></span><p class="wpr-orbit-dialog-caption" hidden></p></div></dialog></section>';
+    }
+    var light = state.settings;
+    var motion = light.motion === "fade" || light.motion === "none" ? light.motion : "zoom";
+    var cards = "";
+    for (var n = 0; n < state.count; n++) {
+      var item = state.slots[n];
+      var photo = item.image && item.image.source !== "empty" ? item.image : null;
+      if (!photo) {
+        cards += '<li><div class="wpr-lightbox-missing">画像がありません。JPEG、PNG、WebPを選び直してください。</div></li>';
+        continue;
+      }
+      var caption = item.caption && String(item.caption).trim()
+        ? '<span class="wpr-lightbox-caption">' + esc(item.caption) + "</span>"
+        : "";
+      cards += '<li><button type="button" class="wpr-lightbox-thumb" aria-haspopup="dialog"><img src="' +
+        esc(srcFor(part, state, n, photo, mode)) + '" alt="' + esc(item.alt) + '">' + caption +
+        '<span class="wpr-sr">拡大して見る</span></button></li>';
+    }
+    var dim = (Number(light.dim) / 100).toFixed(2);
+    return mark + '<section class="wpr-lightbox" data-wpr-part="image-lightbox" data-wpr-id="' + esc(state.instanceId) +
+      '" data-wpr-motion="' + motion + '" data-wpr-duration="' + String(light.duration) + '" data-wpr-backdrop="' +
+      (light.backdrop ? "on" : "off") + '" style="--wpr-duration:' + String(light.duration) + "ms;--wpr-dim:" + dim +
+      ";--wpr-max:" + String(light.maxWidth) + 'px"><ul class="wpr-lightbox-list">' + cards + "</ul>" +
+      '<dialog class="wpr-lightbox-dialog" aria-label="拡大画像" style="--wpr-duration:' + String(light.duration) + "ms;--wpr-dim:" + dim + ";--wpr-max:" + String(light.maxWidth) + 'px"><div class="wpr-lightbox-panel"><button type="button" class="wpr-lightbox-close">閉じる</button>' +
+      '<img class="wpr-lightbox-full" alt=""><p class="wpr-lightbox-dialog-caption" hidden></p></div></dialog></section>';
+  }
+
+  function exampleTitle(part) {
+    if (part === "scroll-reveal") return "スクロールすると順番に現れる";
+    if (part === "orbit-gallery") return "円形に回る画像を、手前に拡大";
+    return "クリックすると画像を拡大";
+  }
+
+  function exampleLead(part) {
+    if (part === "scroll-reveal") return "下へスクロールすると、カードが順番に現れます。";
+    if (part === "orbit-gallery") return "画像が横長の輪になって回ります。押すと、その位置から手前に拡大します。";
+    return "画像を押すと、画面の手前に拡大表示されます。";
+  }
+
+  function exampleShell(part) {
+    return [
+      'body{margin:0;background:#f3f5f8;color:#1b2836;font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;font-size:16px;line-height:1.6;}',
+      ".wpr-example{max-width:1080px;margin:0 auto;padding:20px 16px 64px;}",
+      ".wpr-example-lead{margin:0 0 12px;}",
+      part === "scroll-reveal" ? ".wpr-example-space{height:110vh;}" : ".wpr-example-space{height:12px;}"
+    ].join("\n");
+  }
+
+  function buildExample(part, state, nonce) {
+    var title = exampleTitle(part);
+    var lead = exampleLead(part);
+    var space = '<div class="wpr-example-space"></div>';
+    var main = '<main class="wpr-example"><p class="wpr-example-lead">' + lead + "</p>" +
+      (part === "scroll-reveal" ? space : "") + buildFragment(part, state, "data") +
+      (part === "scroll-reveal" ? space : "") + "</main>";
+    var head = nonce ? "<head><!--p" + String(nonce) + "-->" : "<head>";
+    return "<!DOCTYPE html>\n<html lang=\"ja\">\n" + head + '\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>' +
+      esc(title) + " 確認用</title>\n<style>\n" + exampleShell(part) + "\n" + source(cssIdFor(part)) +
+      "\n</style>\n</head>\n<body>\n" + main + "\n<script>\n" + source(jsIdFor(part)) +
+      "\n<" + "/script>\n</body>\n</html>\n";
+  }
+
+  function currentCode() {
+    var state = partState();
+    if (ui.codeKind === "css") return source(cssId());
+    if (ui.codeKind === "js") return source(jsId());
+    return buildFragment(ui.part, state, "path");
+  }
+
+  function codeFileName() {
+    if (ui.codeKind === "css") return styleName();
+    if (ui.codeKind === "js") return scriptName();
+    if (ui.part === "scroll-reveal") return "reveal-fragment.html";
+    if (ui.part === "orbit-gallery") return "orbit-fragment.html";
+    return "lightbox-fragment.html";
+  }
+
+  function exampleName() {
+    if (ui.part === "scroll-reveal") return "reveal-example.html";
+    if (ui.part === "orbit-gallery") return "orbit-example.html";
+    return "lightbox-example.html";
+  }
+
+  function scriptName() {
+    if (ui.part === "scroll-reveal") return "wpr-reveal.js";
+    if (ui.part === "orbit-gallery") return "wpr-orbit.js";
+    return "wpr-lightbox.js";
+  }
+
+  function styleName() {
+    if (ui.part === "scroll-reveal") return "wpr-reveal.css";
+    if (ui.part === "orbit-gallery") return "wpr-orbit.css";
+    return "wpr-lightbox.css";
+  }
+
+  function toast(message) {
+    var node = document.getElementById("nb-toast");
+    node.textContent = message;
+    node.classList.add("is-on");
+    window.clearTimeout(toast._t);
+    toast._t = window.setTimeout(function () { node.classList.remove("is-on"); }, 2400);
+  }
+
+  function download(filename, text, mime) {
+    var blob = new Blob([text], { type: mime || "text/plain;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  function selectCode() {
+    var pre = document.getElementById("code-block");
+    if (!pre) return;
+    pre.tabIndex = 0;
+    pre.focus();
+    var range = document.createRange();
+    range.selectNodeContents(pre);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function copyCode() {
+    var text = currentCode();
+    var done = function () { toast("コピーしました"); };
+    var fail = function () {
+      selectCode();
+      toast("コピーできない場合は、このコードを選択してコピーしてください");
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done).catch(fail);
+    } else fail();
+  }
+
+  function hasUserImage(state) {
+    return state.slots.some(function (slot) { return slot.image && slot.image.source === "user"; });
+  }
+
+  function usedBytes(state, exceptIndex) {
+    var sum = 0;
+    state.slots.forEach(function (slot, index) {
+      if (index === exceptIndex) return;
+      if (slot.image && slot.image.source === "user") sum += slot.image.bytes || 0;
+    });
+    return sum;
+  }
+
+  function mb(bytes) {
+    return (bytes / (1024 * 1024)).toFixed(1) + "MB";
+  }
+
+  function foot() {
+    return '<p class="nb-foot">調整内容は、このページを開いている間だけ保持します。残す場合は確認用HTMLを保存してください。</p>';
+  }
+
+  function homeHtml() {
+    return '<div class="nb-wrap"><header class="nb-header"><h1>Webパーツ逆引きノート</h1><p class="nb-lead">作りたい動きから、組み込み方を探す</p></header><div class="nb-picks">' +
+      '<button type="button" class="nb-pick" data-part="scroll-reveal"><strong>スクロールすると順番に現れる</strong><span>商品・実績・特徴を、読み進めるタイミングで表示</span><span class="nb-pick-cta">スクロールして試す</span></button>' +
+      '<button type="button" class="nb-pick" data-part="image-lightbox"><strong>クリックすると画像を拡大</strong><span>一覧の写真を、画面の手前で大きく確認</span><span class="nb-pick-cta">画像を押して試す</span></button>' +
+      '<button type="button" class="nb-pick" data-part="orbit-gallery"><strong>円形に回る画像を、手前に拡大【応用】</strong><span>奥行きのある輪から、選んだ1枚が前面に出る</span><span class="nb-pick-cta">回転を試す</span></button>' +
+      "</div>" + foot() + "</div>";
+  }
+
+  function tabBtn(id, label) {
+    var on = ui.tab === id;
+    return '<button type="button" role="tab" id="tab-' + id + '" aria-selected="' + (on ? "true" : "false") + '" aria-controls="panel" tabindex="' + (on ? "0" : "-1") + '">' + label + "</button>";
+  }
+
+  function fieldRange(id, label, min, max, step, value, unit, help, locked) {
+    return '<div class="nb-field' + (locked ? " is-locked" : "") + '"><label for="' + id + '">' + label + '</label><input id="' + id + '" type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '"' + (locked ? " disabled" : "") + '><strong class="nb-value" id="val-' + id + '">' + value + unit + '</strong><p class="nb-help">' + help + "</p></div>";
+  }
+
+  function radio(name, value, label, checked) {
+    return '<label class="nb-choice"><input type="radio" name="' + name + '" value="' + value + '"' + (checked ? " checked" : "") + "><span>" + label + "</span></label>";
+  }
+
+  function revealControls(state) {
+    var s = state.settings;
+    return '<div id="settings"><h2>動き</h2>' +
+      '<div class="nb-field"><span class="nb-choice-title">出現方向</span>' +
+      radio("direction", "bottom", "下から", s.direction === "bottom") +
+      radio("direction", "left", "左から", s.direction === "left") +
+      radio("direction", "right", "右から", s.direction === "right") +
+      radio("direction", "none", "移動なし", s.direction === "none") +
+      '<p class="nb-help">左からは、左側から定位置へ移動します。移動なしは、透明度だけが変わります。</p></div>' +
+      fieldRange("set-duration", "動きの時間", 200, 1200, 100, s.duration, "ミリ秒", "1000ミリ秒は1秒です。速さの感じ方だけを変えます。", false) +
+      fieldRange("set-stagger", "項目ごとの時間差", 0, 250, 50, s.stagger, "ミリ秒", "同時に画面へ入った項目だけ、この間隔で順番に出します。0なら同時です。", false) +
+      fieldRange("set-distance", "移動距離", 0, 60, 5, s.distance, "ピクセル", "移動なしのときは、この欄は使えません。", s.direction === "none") +
+      '<div class="nb-field"><span class="nb-choice-title">再表示</span>' +
+      radio("replay", "once", "最初の1回だけ", s.replay !== "repeat") +
+      radio("replay", "repeat", "戻るたびに", s.replay === "repeat") +
+      '<p class="nb-help">戻るたびは、画面の外へ完全に出てからやり直します。境界のわずかな動きでは点滅させません。</p></div></div>';
+  }
+
+  function lightControls(state) {
+    var s = state.settings;
+    return '<div id="settings"><h2>動き</h2><p class="nb-help">拡大は画面の中央で行います。サムネイルの位置から飛んでくる動きではありません。</p>' +
+      '<div class="nb-field"><span class="nb-choice-title">開閉の動き</span>' +
+      radio("motion", "zoom", "ズーム＋フェード", s.motion === "zoom") +
+      radio("motion", "fade", "フェードのみ", s.motion === "fade") +
+      radio("motion", "none", "なし", s.motion === "none") +
+      "</div>" +
+      fieldRange("set-duration", "動きの時間", 100, 600, 50, s.duration, "ミリ秒", "動きなしのときは、この欄は使えません。", s.motion === "none") +
+      fieldRange("set-dim", "背景の暗さ", 40, 90, 10, s.dim, "%", "画面の手前に出すときの、うしろの暗さです。", false) +
+      fieldRange("set-max", "画像の最大幅", 480, 1280, 80, s.maxWidth, "ピクセル", "上限です。画面の幅や高さに収まるよう、これより小さく出すことがあります。", false) +
+      '<label class="nb-choice"><input id="set-backdrop" type="checkbox"' + (s.backdrop ? " checked" : "") + "><span>暗い背景を押して閉じる</span></label>" +
+      '<p class="nb-help">オフでも「閉じる」ボタンと、パソコンのEscキーで閉じられます。</p></div>';
+  }
+
+  function orbitControls(state) {
+    var s = state.settings;
+    var detail = ui.orbitDetail
+      ? '<div id="orbit-detail"><div class="nb-field"><span class="nb-choice-title">回転方向</span>' +
+        radio("spin", "right", "手前で右へ進む", s.direction !== "left") +
+        radio("spin", "left", "手前で左へ進む", s.direction === "left") +
+        '<p class="nb-help">手前の画像が進む向きです。時計回りという言葉は使いません。</p></div>' +
+        fieldRange("set-thick", "楕円の厚み", 30, 60, 5, s.thick, "%", "上げると、奥と手前の上下の間隔が広がります。", false) +
+        fieldRange("set-back", "奥の画像の大きさ", 50, 85, 5, s.backScale, "%", "手前を100%としたときの、奥の大きさです。", false) +
+        "</div>"
+      : "";
+    return '<div id="settings"><h2>動き</h2><p class="nb-help">奥の画像は小さく暗く、手前は大きく明るくなります。選んだ画像は、その位置から画面の中央へ移動して拡大します。</p>' +
+      '<label class="nb-choice"><input id="set-auto" type="checkbox"' + (s.auto ? " checked" : "") + "><span>自動回転</span></label>" +
+      '<p class="nb-help">オンにすると、出力したページを開いたときに回ります。プレビューで一時停止しても、この設定は変わりません。</p>' +
+      fieldRange("set-period", "1周の時間", 12, 60, 4, s.period, "秒", "数字が大きいほど、ゆっくり回ります。", false) +
+      fieldRange("set-bright", "奥の明るさ", 40, 90, 5, s.backBright, "%", "手前を100%としたときの、奥の明るさです。小さいほど暗くなります。", false) +
+      fieldRange("set-duration", "拡大・戻りの時間", 200, 600, 50, s.duration, "ミリ秒", "元の位置と前面の間を移動する時間です。", false) +
+      '<button type="button" class="nb-btn" id="btn-detail" aria-expanded="' + (ui.orbitDetail ? "true" : "false") + '">' + (ui.orbitDetail ? "詳しい調整を閉じる" : "詳しく調整") + "</button>" +
+      detail + "</div>";
+  }
+
+  function slotsHtml(state) {
+    var reveal = ui.part === "scroll-reveal";
+    var orbit = ui.part === "orbit-gallery";
+    var max = slotMax(ui.part);
+    var html = '<div id="materials"><h2>素材</h2><p class="nb-help">JPEG、PNG、WebP。1枚4MBまで、このパーツ合計' + (orbit ? "20MB・12枚" : "12MB・6枚") + 'まで。SVG、GIF、動画は使えません。枚数を減らしても、このページを開いている間は内容を覚えています。</p><p class="nb-help" id="nb-usage"></p><label class="nb-field" for="slot-count"><span>' +
+      (reveal ? "カードの枚数" : "画像の枚数") + '</span><select id="slot-count" class="nb-select">';
+    for (var n = 1; n <= max; n++) html += '<option value="' + n + '"' + (state.count === n ? " selected" : "") + ">" + n + "枚</option>";
+    html += "</select></label>";
+    if (orbit) html += '<p class="nb-help">3枚以上で輪になって回ります。1〜2枚のときは、回転せずにその場で拡大できます。</p>';
+    for (var i = 0; i < state.count; i++) {
+      html += '<fieldset class="nb-slot"><legend>' + (i + 1) + '枚目</legend><img class="nb-thumb" id="slot-' + i + '-preview" alt=""><p class="nb-filemeta" id="slot-' + i + '-meta"></p>';
+      if (reveal) {
+        html += '<label class="nb-field">見出し<input class="nb-input" id="slot-' + i + '-title" maxlength="40" autocomplete="off"></label>';
+        html += '<label class="nb-field">説明<textarea class="nb-area" id="slot-' + i + '-body" maxlength="200"></textarea></label>';
+      }
+      html += '<label class="nb-field">画像の説明（代替テキスト）<input class="nb-input" id="slot-' + i + '-alt" maxlength="200" autocomplete="off"></label>';
+      if (!reveal) html += '<label class="nb-field">画像の下に出す説明（任意）<textarea class="nb-area" id="slot-' + i + '-caption" maxlength="200"></textarea></label>';
+      html += '<label class="nb-field">画像を差し替える<input id="slot-' + i + '-file" type="file" accept="image/jpeg,image/png,image/webp"></label>';
+      html += '<button type="button" class="nb-btn" id="slot-' + i + '-clear">この画像を削除</button></fieldset>';
+    }
+    html += "</div>";
+    return html;
+  }
+
+  function tryHtml(state) {
+    var reveal = ui.part === "scroll-reveal";
+    var orbit = ui.part === "orbit-gallery";
+    var hint = reveal ? "この見本の中を下へスクロールしてください" : orbit ? "輪の画像を押すと、その位置から手前に出ます。止めたいときは「回転を止める」を押します。" : "画像を押して、拡大表示を試してください";
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var controls = reveal ? revealControls(state) : orbit ? orbitControls(state) : lightControls(state);
+    return '<div class="nb-try"><div><p id="preview-hint">' + hint + "</p>" +
+      (reduce ? '<p class="nb-note" id="reduce-note">端末の設定に合わせて動きを省略しています</p>' : '<p class="nb-note" id="reduce-note" hidden>端末の設定に合わせて動きを省略しています</p>') +
+      '<iframe class="nb-frame" id="preview-frame" title="動作見本"></iframe></div><div class="nb-controls">' +
+      (ui.alert ? '<p class="nb-alert" role="alert" id="nb-alert">' + esc(ui.alert) + "</p>" : '<p class="nb-alert" role="alert" id="nb-alert" hidden></p>') +
+      (ui.confirm ? '<div class="nb-confirm" role="alertdialog" aria-labelledby="nb-confirm-title"><p id="nb-confirm-title">取り込んだ画像は、見本に戻すと消えます。見出しや説明の編集も元に戻ります。</p><div class="nb-actions"><button type="button" class="nb-btn primary" id="nb-confirm-yes">見本に戻す</button><button type="button" class="nb-btn" id="nb-confirm-no">キャンセル</button></div></div>' : "") +
+      controls +
+      '<div class="nb-actions"><button type="button" class="nb-btn" id="btn-restart">最初から試す</button><button type="button" class="nb-btn" id="btn-reset-settings">設定を初期値に戻す</button><button type="button" class="nb-btn" id="btn-reset-materials">見本の素材に戻す</button></div>' +
+      slotsHtml(state) + "</div></div>";
+  }
+
+  function learnHtml() {
+    var state = partState();
+    var s = state.settings;
+    if (ui.part === "scroll-reveal") {
+      return '<h2>処理の順番</h2><p>JavaScriptが毎フレーム座標を計算し続ける必要はありません。画面に入ったタイミングでクラスを付け、見た目の変化はCSSが行います。</p><ol>' +
+        "<li><h3>HTML：動かすカードを用意する</h3><p>並べた要素が、その並びのまま対象になります。左右の位置では順番を決めません。</p><pre class=\"nb-code\">" + esc('<li class="wpr-reveal-item"><article class="wpr-reveal-card">…</article></li>') + "</pre></li>" +
+        "<li><h3>CSS：待機中の透明度と位置、表示後の状態、動く時間を指定する</h3><p>いまの動きの時間は" + s.duration + "ミリ秒、時間差は" + s.stagger + "ミリ秒、移動距離は" + (s.direction === "none" ? "0" : s.distance) + "ピクセルです。イージングはease-outで固定です。</p><pre class=\"nb-code\">" + esc(".wpr-reveal.wpr-ready .wpr-reveal-item { opacity: 0; }\n.wpr-reveal.wpr-ready .wpr-reveal-item.is-in { opacity: 1; transform: none; }") + "</pre></li>" +
+        "<li><h3>JavaScript：画面に入ったことを検知する</h3><p>IntersectionObserverが、表示領域との交差を知らせます。交差率10%を基本にし、画面より極端に高い要素は、画面の高さの10%が見えたときも対象にします。</p><pre class=\"nb-code\">" + esc("new IntersectionObserver(sync, { root: null, threshold: [0, 0.1] });") + "</pre></li>" +
+        "<li><h3>JavaScript：表示用のクラスを付ける</h3><p>同じタイミングで入った項目だけを、HTMLの順に 0、時間差、時間差×2… と遅らせます。</p><pre class=\"nb-code\">" + esc('item.classList.add("is-in");') + "</pre></li>" +
+        "<li><h3>CSS：クラスの変更に応じて、見た目が変わる</h3><p>.wpr-ready が付く前は透明にしません。スクリプトが動かなくても本文は読めます。</p></li></ol>";
+    }
+    if (ui.part === "orbit-gallery") {
+      return '<h2>処理の順番</h2><p>スクロール表示と画像拡大のあとに試す応用です。三角関数の暗記は要りません。設定を変えると、速さ・暗さ・厚みが変わります。CSSが見た目、JavaScriptが角度と再生を担当します。</p><ol>' +
+        "<li><h3>円に並べる</h3><p>画像ボタンを、横長の楕円の上に置きます。入力した順番のまま、等間隔です。</p><pre class=\"nb-code\">" + esc("var angle = phase + index * Math.PI * 2 / count;\nvar x = centerX + radiusX * Math.sin(angle);\nvar y = centerY + radiusY * Math.cos(angle);") + "</pre></li>" +
+        "<li><h3>奥行きを作る</h3><p>手前を大きく明るく、奥を小さく暗くします。暗さは画像の上の暗い膜で表し、説明文までは暗くしません。いまの奥の明るさは" + s.backBright + "%、奥の大きさは" + s.backScale + "%、厚みは" + s.thick + "%です。</p><pre class=\"nb-code\">" + esc("var depth = (Math.cos(angle) + 1) / 2;\nvar scale = backScale + (1 - backScale) * depth;") + "</pre></li>" +
+        "<li><h3>少しずつ位置を進める</h3><p>1周の時間はいま" + s.period + "秒です。経過した時間から角度を足すので、画面の細かさが違っても1周の長さは変わりません。</p><pre class=\"nb-code\">" + esc("phase += direction * (delta / 1000) * Math.PI * 2 / period;") + "</pre></li>" +
+        "<li><h3>選択したら止める</h3><p>画像を選ぶ、マウスが輪の上にある、キーボードで操作している、画面の外、別のタブ、拡大中は止めます。止める理由が一つでも残っている間は再開しません。</p></li>" +
+        "<li><h3>元位置から拡大する</h3><p>中央に別の画像を出すのではなく、押した画像が今の位置から中央へ移動します。時間は" + s.duration + "ミリ秒、イージングはease-outです。</p><pre class=\"nb-code\">" + esc('fly.animate(frames, { duration: duration, easing: "ease-out" });') + "</pre></li>" +
+        "<li><h3>戻して再開する</h3><p>閉じると同じ画像が元の位置へ戻り、開く前に回っていたときだけ再開します。手動で止めていた場合は止めたままです。</p></li></ol>";
+    }
+    return '<h2>処理の順番</h2><p>一覧、押した画像の特定、開く／閉じる、見た目は分けて考えます。いまの開閉は' + (s.motion === "fade" ? "フェードのみ" : s.motion === "none" ? "なし" : "ズーム＋フェード") + "、時間は" + s.duration + "ミリ秒、背景の暗さは" + s.dim + "%、最大幅は" + s.maxWidth + "ピクセルです。</p><ol>" +
+      "<li><h3>HTML：一覧と拡大表示を用意する</h3><p>サムネイルは button です。拡大側は dialog を1つだけ持ち、前後の画像へ移動する操作はありません。</p><pre class=\"nb-code\">" + esc('<button type="button" class="wpr-lightbox-thumb"><img alt="画像の説明"></button>\n<dialog class="wpr-lightbox-dialog">…</dialog>') + "</pre></li>" +
+      "<li><h3>JavaScript：クリックで、押された画像を特定する</h3><p>ボタンの中の img から、拡大画像のアドレスと代替テキストをコピーします。</p></li>" +
+      "<li><h3>JavaScript：開く／閉じる</h3><p>dialog.showModal() で開きます。閉じるボタン、Esc、許可した背景クリックは、同じ終了処理へ集めます。動きが終わる前に dialog を閉じないようにします。</p></li>" +
+      "<li><h3>CSS：背景とサイズと動きを決める</h3><p>サムネイルは枠に合わせて切り取り、拡大後は縦横比を保って全体を見せます。最大幅は上限で、画面の外へ閉じるボタンを出しません。</p></li></ol>";
+  }
+
+  function mappingHtml(state) {
+    var rows = "";
+    var anyUser = false;
+    for (var i = 0; i < state.count; i++) {
+      var image = state.slots[i].image;
+      if (!image || image.source === "empty") continue;
+      if (image.source === "user") {
+        anyUser = true;
+        rows += "<tr><td>" + esc(image.name || "画像") + "</td><td>" + esc(deployPath(ui.part, state, i, image)) + "</td><td>制作中のHTMLと同じ階層の images フォルダー</td></tr>";
+      } else {
+        rows += "<tr><td>" + esc(image.name || "見本素材") + "</td><td>埋め込み</td><td>コードの中に含まれます。ファイルを別に置く必要はありません</td></tr>";
+      }
+    }
+    var note = anyUser
+      ? "利用者の画像は、下の配置する名前で保存して置く必要があります。元のファイル名のままでは表示できません。画像一式のZIP書き出しはありません。"
+      : "いまは見本素材だけです。コードへ埋め込まれるので、画像ファイルを別に置く必要はありません。";
+    return "<h2>画像の対応</h2><p>" + note + '</p><table class="nb-table"><thead><tr><th>元の画像名</th><th>配置する名前</th><th>配置先</th></tr></thead><tbody>' +
+      (rows || "<tr><td colspan=\"3\">表示する画像がありません。</td></tr>") + "</tbody></table>";
+  }
+
+  function methodHtml() {
+    var js = scriptName();
+    var css = styleName();
+    var onNew = ui.method === "new";
+    var guide = onNew
+      ? "<ol><li>制作中のHTML、CSS、JavaScriptをコピーして、戻せる状態にします。</li><li>HTML断片を、bodyの中の表示したい場所へ貼ります。ページ全体の雛形は足しません。</li><li>必要な画像を、対応表の名前で images フォルダーへ置きます。見本素材だけの場合、この作業はありません。</li><li>出力したCSSを、既存CSSの末尾へ追記するか、" + esc(css) + " として保存して head から読み込みます。</li><li>出力したJavaScriptを " + esc(js) + " として保存します。</li><li>そのファイルを読み込む script を、body終了タグの直前に1回だけ置きます。<pre class=\"nb-code\">" + esc('<script src="' + js + '"></' + "script>") + "</pre>既存ファイルへJavaScriptを追記した場合は、そのファイルを二重に読み込ませないでください。</li><li>保存したHTMLを外部のブラウザーで開き、動作を確認します。</li></ol>"
+      : ui.part === "scroll-reveal"
+        ? "<p>動かしたい範囲を、書き出したクラスと属性で包みます。自動で書き換える機能はありません。</p><h3>変更前</h3><pre class=\"nb-code\">" + esc("<article class=\"card\">\n  <h3>見出し</h3>\n  <p>説明</p>\n</article>") + "</pre><h3>変更後</h3><pre class=\"nb-code\">" + esc("<!-- ここからが動かす範囲。data-wpr-id はページ内で重複させない -->\n<section class=\"wpr-reveal wpr-from-bottom\" data-wpr-part=\"scroll-reveal\" data-wpr-replay=\"once\" data-wpr-stagger=\"100\">\n  <ul class=\"wpr-reveal-list\">\n    <!-- すでに transform で飾っている要素は、その外側を wpr-reveal-item にする -->\n    <li class=\"wpr-reveal-item\"><article class=\"card\">…</article></li>\n  </ul>\n</section>") + "</pre>"
+      : ui.part === "orbit-gallery"
+        ? "<p>既存の画像一覧へクラスを1つ足すだけでは、この輪にはなりません。1枚ずつの画像と説明を、専用のステージへ移します。</p><h3>変更前</h3><pre class=\"nb-code\">" + esc("<ul class=\"photos\">\n  <li><img src=\"photo.jpg\" alt=\"作業机\"></li>\n</ul>") + "</pre><h3>変更後</h3><pre class=\"nb-code\">" + esc("<!-- 専用のステージ、画像ボタン、回転の操作、拡大用 dialog が必要 -->\n<section class=\"wpr-orbit\" data-wpr-part=\"orbit-gallery\" data-wpr-auto=\"on\" data-wpr-period=\"24\">\n  <div class=\"wpr-orbit-stage\">\n    <ul class=\"wpr-orbit-list\">\n      <li class=\"wpr-orbit-item\"><button type=\"button\" class=\"wpr-orbit-card\"><img class=\"wpr-orbit-img\" src=\"photo.jpg\" alt=\"作業机\"></button></li>\n    </ul>\n  </div>\n</section>") + "</pre><p>回転のボタンと拡大用 dialog は、書き出したHTML断片にあるものを同じパーツの内側へ置きます。</p>"
+        : "<p>既存の画像を button で包み、dialog をそのパーツの中へ置きます。リンクの中へ、さらにボタンは入れません。リンク画像なら、そのリンクをボタンへ置き換えます。</p><h3>変更前</h3><pre class=\"nb-code\">" + esc("<a href=\"photo.jpg\"><img src=\"photo.jpg\" alt=\"作業机\"></a>") + "</pre><h3>変更後</h3><pre class=\"nb-code\">" + esc("<!-- a の中に button を入れず、a を button へ置き換える -->\n<button type=\"button\" class=\"wpr-lightbox-thumb\">\n  <img src=\"photo.jpg\" alt=\"作業机\">\n  <span class=\"wpr-sr\">拡大して見る</span>\n</button>") + "</pre><p>拡大用の dialog は、書き出したHTML断片にあるものを、同じパーツの内側へ置きます。</p>";
+    return '<div class="nb-subtabs" role="tablist" aria-label="組み込み方"><button type="button" id="method-new" aria-selected="' + (onNew ? "true" : "false") + '">A 新しいパーツをそのまま追加する</button><button type="button" id="method-existing" aria-selected="' + (onNew ? "false" : "true") + '">B 今あるカードや画像に動きを付ける</button></div>' + guide;
+  }
+
+  function embedHtml(state) {
+    var kinds = [["html", "HTML"], ["css", "CSS"], ["js", "JavaScript"]];
+    var tabs = "";
+    for (var i = 0; i < kinds.length; i++) {
+      var on = ui.codeKind === kinds[i][0];
+      tabs += '<button type="button" id="code-' + kinds[i][0] + '" aria-selected="' + (on ? "true" : "false") + '">' + kinds[i][1] + "</button>";
+    }
+    return "<h2>既存ページ用コード</h2><p>HTMLは、貼る断片だけです。確認用HTMLは、いまの設定と素材を埋め込んだ単体ファイルです。</p>" +
+      mappingHtml(state) + '<div class="nb-subtabs" role="tablist" aria-label="コードの種類">' + tabs + '</div><pre class="nb-code" id="code-block" tabindex="0" aria-label="書き出したコード"></pre>' +
+      '<div class="nb-actions"><button type="button" class="nb-btn primary" id="btn-copy">コピー</button><button type="button" class="nb-btn" id="btn-save-code">ファイルとして保存</button><button type="button" class="nb-btn" id="btn-save-example">確認用HTMLを保存</button></div>' +
+      "<h2>Dreamweaverへの組み込み</h2><p>コードビューでの作業です。特定のバージョンのメニュー操作には依存しません。</p>" + methodHtml() +
+      "<h2>動かない場合に見る項目</h2><ol><li>画像のパスが、対応表の配置名と一致しているか。</li><li>CSSを読み忘れているか。追記した場合は、そのファイルを保存したか。</li><li>JavaScriptを読み忘れているか。script は body 終了タグの直前に1回だけか。</li><li>クラス名と data-wpr-part が、書き出した断片と一致しているか。</li><li>同じ script を二重に読み込んでいないか。</li><li>ブラウザーのコンソールにエラーが出ていないか。</li></ol><p>直らないときも、!important を増やして上書きする方法には進まないでください。読み込み順とクラス名を先に確認します。</p>";
+  }
+
+  function partHtml() {
+    var state = partState();
+    var name = ui.part === "scroll-reveal" ? "スクロールすると順番に現れる" : ui.part === "orbit-gallery" ? "円形に回る画像を、手前に拡大【応用】" : "クリックすると画像を拡大";
+    var panel = ui.tab === "learn" ? learnHtml() : ui.tab === "embed" ? embedHtml(state) : tryHtml(state);
+    return '<div class="nb-wrap"><p class="nb-kicker">Webパーツ逆引きノート</p><button type="button" class="nb-back" id="back-list"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M12.5 4 L7 10 L12.5 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>パーツ一覧</button><h1>' +
+      name + '</h1><div class="nb-tabs" role="tablist" aria-label="作業の切り替え">' + tabBtn("try", "試す・調整する") + tabBtn("learn", "しくみを読む") + tabBtn("embed", "自分のページに組み込む") + '</div><div id="panel" role="tabpanel" aria-labelledby="tab-' + ui.tab + '">' + panel + "</div>" + foot() + "</div>";
+  }
+
+  function fillSlots(state) {
+    var bytes = usedBytes(state, -1);
+    var usage = document.getElementById("nb-usage");
+    if (usage) usage.textContent = "現在の取り込み " + mb(bytes) + " / " + (ui.part === "orbit-gallery" ? "20MB" : "12MB");
+    for (var i = 0; i < state.count; i++) {
+      var slot = state.slots[i];
+      var title = document.getElementById("slot-" + i + "-title");
+      var body = document.getElementById("slot-" + i + "-body");
+      var alt = document.getElementById("slot-" + i + "-alt");
+      var caption = document.getElementById("slot-" + i + "-caption");
+      var preview = document.getElementById("slot-" + i + "-preview");
+      var meta = document.getElementById("slot-" + i + "-meta");
+      var clear = document.getElementById("slot-" + i + "-clear");
+      if (title) title.value = slot.title;
+      if (body) body.value = slot.body;
+      if (alt) alt.value = slot.alt;
+      if (caption) caption.value = slot.caption;
+      var image = slot.image;
+      if (preview) {
+        if (image && image.source !== "empty" && image.dataUrl) {
+          preview.hidden = false;
+          preview.src = image.dataUrl;
+          preview.alt = slot.alt || "選択中の画像";
+        } else preview.hidden = true;
+      }
+      if (meta) {
+        if (!image || image.source === "empty") meta.textContent = "画像なし";
+        else if (image.source === "builtin") meta.textContent = "見本素材";
+        else meta.textContent = image.name + "（" + mb(image.bytes || 0) + "）";
+      }
+      if (clear) clear.disabled = !image || image.source === "empty";
+    }
+  }
+
+  function refreshCode() {
+    var pre = document.getElementById("code-block");
+    if (pre) pre.textContent = currentCode();
+  }
+
+  function patchPreview() {
+    var frame = document.getElementById("preview-frame");
+    if (!frame || !frame.contentDocument || !frame.contentDocument.body) return;
+    var doc = frame.contentDocument;
+    var state = partState();
+    var root = doc.querySelector("[data-wpr-part]");
+    if (!root) return;
+    if (ui.part === "scroll-reveal") {
+      var cards = root.querySelectorAll(".wpr-reveal-item");
+      if (cards.length !== state.count) return;
+      for (var i = 0; i < cards.length; i++) {
+        var slot = state.slots[i];
+        var title = cards[i].querySelector(".wpr-reveal-title");
+        var text = cards[i].querySelector(".wpr-reveal-text");
+        var img = cards[i].querySelector(".wpr-reveal-img");
+        if (title) title.textContent = slot.title;
+        if (text) text.textContent = slot.body;
+        if (img) img.alt = slot.alt;
+      }
+      return;
+    }
+    if (ui.part === "orbit-gallery") {
+      var orbitCards = root.querySelectorAll(".wpr-orbit-card");
+      var orbitExpected = 0;
+      for (var oi = 0; oi < state.count; oi++) if (state.slots[oi].image && state.slots[oi].image.source !== "empty") orbitExpected++;
+      if (orbitCards.length !== orbitExpected) return;
+      var orbitIndex = 0;
+      for (var ok = 0; ok < state.count; ok++) {
+        var orbitItem = state.slots[ok];
+        if (!orbitItem.image || orbitItem.image.source === "empty") continue;
+        var orbitCard = orbitCards[orbitIndex++];
+        var orbitImg = orbitCard.querySelector("img");
+        var orbitCap = orbitCard.querySelector(".wpr-orbit-cap");
+        if (orbitImg) orbitImg.alt = orbitItem.alt;
+        if (orbitCap) orbitCap.textContent = orbitItem.caption;
+      }
+      return;
+    }
+    var buttons = root.querySelectorAll(".wpr-lightbox-thumb");
+    var expected = 0;
+    for (var n = 0; n < state.count; n++) if (state.slots[n].image && state.slots[n].image.source !== "empty") expected++;
+    if (buttons.length !== expected) return;
+    var index = 0;
+    for (var k = 0; k < state.count; k++) {
+      var item = state.slots[k];
+      if (!item.image || item.image.source === "empty") continue;
+      var button = buttons[index++];
+      var image = button.querySelector("img");
+      var cap = button.querySelector(".wpr-lightbox-caption");
+      if (image) image.alt = item.alt;
+      if (cap) cap.textContent = item.caption;
+      else if (item.caption && item.caption.trim()) {
+        reloadPreview({ keepScroll: true, force: true });
+        return;
+      }
+      var full = root.querySelector(".wpr-lightbox-full");
+      var dialogCap = root.querySelector(".wpr-lightbox-dialog-caption");
+      if (root.querySelector(".wpr-lightbox-dialog").open && full && full.src === image.src) {
+        full.alt = item.alt;
+        if (dialogCap) {
+          dialogCap.textContent = item.caption || "";
+          dialogCap.hidden = !item.caption || !String(item.caption).trim();
+        }
+      }
+    }
+  }
+
+  function reloadPreview(opts) {
+    var frame = document.getElementById("preview-frame");
+    if (!frame) return;
+    var keep = 0;
+    if (opts && opts.keepScroll) {
+      try { keep = frame.contentWindow.scrollY || 0; } catch (err) { keep = 0; }
+    }
+    frame._keepScroll = keep;
+    previewNonce += 1;
+    frame.srcdoc = buildExample(ui.part, partState(), opts && opts.force ? previewNonce : "");
+  }
+
+  function syncLocks() {
+    var state = partState();
+    var distance = document.getElementById("set-distance");
+    if (distance) {
+      var lockMove = state.settings.direction === "none";
+      distance.disabled = lockMove;
+      distance.closest(".nb-field").classList.toggle("is-locked", lockMove);
+    }
+    var duration = document.getElementById("set-duration");
+    if (duration && ui.part === "image-lightbox") {
+      var lockTime = state.settings.motion === "none";
+      duration.disabled = lockTime;
+      duration.closest(".nb-field").classList.toggle("is-locked", lockTime);
+    }
+  }
+
+  function showAlert(message) {
+    ui.alert = message;
+    var node = document.getElementById("nb-alert");
+    if (!node) return;
+    node.hidden = false;
+    node.textContent = message;
+  }
+
+  function clearAlert() {
+    ui.alert = "";
+    var node = document.getElementById("nb-alert");
+    if (!node) return;
+    node.hidden = true;
+    node.textContent = "";
+  }
+
+  function readHeader(file) {
+    return file.slice(0, 16).arrayBuffer();
+  }
+
+  function kindOf(bytes, mime) {
+    var jpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    var png = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+    var webp = bytes.length >= 12 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+    if (jpeg && mime === "image/jpeg") return "image/jpeg";
+    if (png && mime === "image/png") return "image/png";
+    if (webp && mime === "image/webp") return "image/webp";
+    return "";
+  }
+
+  function canDecode(url) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () { resolve(img.naturalWidth > 0 && img.naturalHeight > 0); };
+      img.onerror = function () { resolve(false); };
+      img.src = url;
+    });
+  }
+
+  function readData(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || "")); };
+      reader.onerror = function () { reject(new Error("read")); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function onFile(index, file) {
+    if (!file) return;
+    var state = partState();
+    if (file.size > LIMIT_ONE) {
+      showAlert("1枚の上限は4MBです。小さい画像を選び直してください。ほかの素材はそのままです。");
+      return;
+    }
+    if (usedBytes(state, index) + file.size > byteCap(ui.part)) {
+      showAlert("このパーツの合計が" + (ui.part === "orbit-gallery" ? "20MB" : "12MB") + "を超えます。別の画像を減らすか、小さい画像を選んでください。ほかの素材はそのままです。");
+      return;
+    }
+    readHeader(file).then(function (buffer) {
+      var mime = kindOf(new Uint8Array(buffer), file.type);
+      if (!mime) {
+        showAlert("この形式には対応していません。JPEG、PNG、WebPを選んでください。ほかの素材はそのままです。");
+        return;
+      }
+      return readData(file).then(function (dataUrl) {
+        return canDecode(dataUrl).then(function (ok) {
+          if (!ok) {
+            showAlert("画像として読み込めませんでした。ファイルを選び直してください。ほかの素材はそのままです。");
+            return;
+          }
+          state.slots[index].image = { source: "user", dataUrl: dataUrl, mime: mime, name: file.name || "image", bytes: file.size };
+          clearAlert();
+          paint();
+        });
+      });
+    }).catch(function () {
+      showAlert("ファイルを読み込めませんでした。選び直してください。ほかの素材はそのままです。");
+    });
+  }
+
+  function bindText() {
+    var state = partState();
+    for (var i = 0; i < state.count; i++) {
+      (function (index) {
+        var map = [
+          ["title", 40],
+          ["body", 200],
+          ["alt", 200],
+          ["caption", 200]
+        ];
+        map.forEach(function (pair) {
+          var input = document.getElementById("slot-" + index + "-" + pair[0]);
+          if (!input) return;
+          input.addEventListener("input", function () {
+            var value = input.value.length > pair[1] ? input.value.slice(0, pair[1]) : input.value;
+            state.slots[index][pair[0]] = value;
+            patchPreview();
+            refreshCode();
+          });
+        });
+        var file = document.getElementById("slot-" + index + "-file");
+        if (file) file.addEventListener("change", function () {
+          var picked = file.files && file.files[0];
+          file.value = "";
+          onFile(index, picked);
+        });
+        var clear = document.getElementById("slot-" + index + "-clear");
+        if (clear) clear.addEventListener("click", function () {
+          state.slots[index].image = { source: "empty" };
+          clearAlert();
+          paint();
+        });
+      })(i);
+    }
+  }
+
+  function bindSettings() {
+    var state = partState();
+    document.querySelectorAll('input[name="direction"]').forEach(function (input) {
+      input.addEventListener("change", function () {
+        if (!input.checked) return;
+        state.settings.direction = input.value;
+        syncLocks();
+        reloadPreview({ keepScroll: true, force: true });
+        refreshCode();
+      });
+    });
+    document.querySelectorAll('input[name="replay"]').forEach(function (input) {
+      input.addEventListener("change", function () {
+        if (!input.checked) return;
+        state.settings.replay = input.value;
+        reloadPreview({ keepScroll: true, force: true });
+        refreshCode();
+      });
+    });
+    document.querySelectorAll('input[name="motion"]').forEach(function (input) {
+      input.addEventListener("change", function () {
+        if (!input.checked) return;
+        state.settings.motion = input.value;
+        syncLocks();
+        reloadPreview({ keepScroll: true, force: true });
+        refreshCode();
+      });
+    });
+    var backdrop = document.getElementById("set-backdrop");
+    if (backdrop) backdrop.addEventListener("change", function () {
+      state.settings.backdrop = backdrop.checked;
+      reloadPreview({ keepScroll: true, force: true });
+      refreshCode();
+    });
+    document.querySelectorAll('input[name="spin"]').forEach(function (input) {
+      input.addEventListener("change", function () {
+        if (!input.checked) return;
+        state.settings.direction = input.value;
+        reloadPreview({ keepScroll: true, force: true });
+        refreshCode();
+      });
+    });
+    var auto = document.getElementById("set-auto");
+    if (auto) auto.addEventListener("change", function () {
+      state.settings.auto = auto.checked;
+      reloadPreview({ keepScroll: true, force: true });
+      refreshCode();
+    });
+    var detail = document.getElementById("btn-detail");
+    if (detail) detail.addEventListener("click", function () {
+      ui.orbitDetail = !ui.orbitDetail;
+      ui.focusId = "btn-detail";
+      paint();
+    });
+    [["set-duration", "duration", "ミリ秒"], ["set-stagger", "stagger", "ミリ秒"], ["set-distance", "distance", "ピクセル"], ["set-dim", "dim", "%"], ["set-max", "maxWidth", "ピクセル"], ["set-period", "period", "秒"], ["set-bright", "backBright", "%"], ["set-thick", "thick", "%"], ["set-back", "backScale", "%"]].forEach(function (spec) {
+      var input = document.getElementById(spec[0]);
+      if (!input) return;
+      input.addEventListener("input", function () {
+        state.settings[spec[1]] = Number(input.value);
+        var label = document.getElementById("val-" + spec[0]);
+        if (label) label.textContent = input.value + spec[2];
+        reloadPreview({ keepScroll: true, force: true });
+        refreshCode();
+      });
+    });
+  }
+
+  function bind() {
+    document.querySelectorAll("[data-part]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        ui.screen = "part";
+        ui.part = button.getAttribute("data-part");
+        ui.tab = "try";
+        ui.alert = "";
+        ui.confirm = false;
+        paint();
+      });
+    });
+    var back = document.getElementById("back-list");
+    if (back) back.addEventListener("click", function () {
+      ui.screen = "home";
+      ui.confirm = false;
+      paint();
+    });
+    document.querySelectorAll('[role="tab"]').forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        ui.tab = tab.id.replace("tab-", "");
+        ui.focusId = tab.id;
+        ui.confirm = false;
+        paint();
+      });
+    });
+    var tabs = document.querySelector(".nb-tabs");
+    if (tabs) tabs.addEventListener("keydown", function (event) {
+      var order = ["try", "learn", "embed"];
+      var index = order.indexOf(ui.tab);
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      event.preventDefault();
+      var next = event.key === "ArrowRight" ? (index + 1) % 3 : (index + 2) % 3;
+      ui.tab = order[next];
+      ui.focusId = "tab-" + ui.tab;
+      paint();
+    });
+    var count = document.getElementById("slot-count");
+    if (count) count.addEventListener("change", function () {
+      var value = Number(count.value);
+      var max = slotMax(ui.part);
+      if (value >= 1 && value <= max) partState().count = value;
+      paint();
+    });
+    var restart = document.getElementById("btn-restart");
+    if (restart) restart.addEventListener("click", function () { reloadPreview({ force: true }); });
+    var resetSettings = document.getElementById("btn-reset-settings");
+    if (resetSettings) resetSettings.addEventListener("click", function () {
+      partState().settings = defaultSettings(ui.part);
+      ui.alert = "";
+      paint();
+    });
+    var resetMaterials = document.getElementById("btn-reset-materials");
+    if (resetMaterials) resetMaterials.addEventListener("click", function () {
+      if (hasUserImage(partState())) {
+        ui.confirm = true;
+        ui.focusId = "nb-confirm-yes";
+        paint();
+        return;
+      }
+      var keep = partState();
+      keep.slots = freshSlots(ui.part);
+      keep.count = defaultCount(ui.part);
+      ui.alert = "";
+      paint();
+    });
+    var yes = document.getElementById("nb-confirm-yes");
+    if (yes) yes.addEventListener("click", function () {
+      var keep = partState();
+      keep.slots = freshSlots(ui.part);
+      keep.count = defaultCount(ui.part);
+      ui.confirm = false;
+      ui.alert = "";
+      paint();
+    });
+    var no = document.getElementById("nb-confirm-no");
+    if (no) no.addEventListener("click", function () {
+      ui.confirm = false;
+      ui.focusId = "btn-reset-materials";
+      paint();
+    });
+    ["html", "css", "js"].forEach(function (kind) {
+      var button = document.getElementById("code-" + kind);
+      if (!button) return;
+      button.addEventListener("click", function () {
+        ui.codeKind = kind;
+        ui.focusId = button.id;
+        paint();
+      });
+    });
+    var methodNew = document.getElementById("method-new");
+    var methodOld = document.getElementById("method-existing");
+    if (methodNew) methodNew.addEventListener("click", function () { ui.method = "new"; ui.focusId = "method-new"; paint(); });
+    if (methodOld) methodOld.addEventListener("click", function () { ui.method = "existing"; ui.focusId = "method-existing"; paint(); });
+    var copy = document.getElementById("btn-copy");
+    if (copy) copy.addEventListener("click", copyCode);
+    var saveCode = document.getElementById("btn-save-code");
+    if (saveCode) saveCode.addEventListener("click", function () {
+      var mime = ui.codeKind === "css" ? "text/css;charset=utf-8" : ui.codeKind === "js" ? "text/javascript;charset=utf-8" : "text/html;charset=utf-8";
+      download(codeFileName(), currentCode(), mime);
+    });
+    var saveExample = document.getElementById("btn-save-example");
+    if (saveExample) saveExample.addEventListener("click", function () {
+      download(exampleName(), buildExample(ui.part, partState(), ""), "text/html;charset=utf-8");
+    });
+    var frame = document.getElementById("preview-frame");
+    if (frame) frame.addEventListener("load", function () {
+      var y = frame._keepScroll || 0;
+      try { frame.contentWindow.scrollTo(0, y); } catch (err) {}
+    });
+    bindSettings();
+    bindText();
+    fillSlots(partState());
+    refreshCode();
+    if (frame) reloadPreview({ force: true });
+  }
+
+  function paint() {
+    document.getElementById("app").innerHTML = ui.screen === "home" ? homeHtml() : partHtml();
+    bind();
+    if (ui.focusId) {
+      var target = document.getElementById(ui.focusId);
+      ui.focusId = "";
+      if (target) target.focus();
+    }
+  }
+
+  ["src-js-reveal", "src-js-lightbox", "src-js-orbit"].forEach(function (id) {
+    try { new Function(source(id)); }
+    catch (err) { console.error(id, err); }
+  });
+
+  var media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (media.addEventListener) media.addEventListener("change", function () { if (ui.screen === "part" && ui.tab === "try") paint(); });
+  paint();
+})();
+
+</script>
+</body>
+</html>
